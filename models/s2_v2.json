@@ -1,0 +1,396 @@
+{
+ "key": "s2_v2",
+ "file": "scene2_floating_island_v2.blend",
+ "camera": {
+  "pos": [
+   1.5,
+   6.45,
+   27.0
+  ],
+  "dir": [
+   -0.04683,
+   -0.228,
+   -0.97253
+  ],
+  "vfov": 35.115,
+  "focus": 0.0,
+  "near": 0.5,
+  "far": 4000.0
+ },
+ "view": {
+  "transform": "Khronos PBR Neutral",
+  "look": "None",
+  "exposure": 0.0,
+  "gamma": 1.0
+ },
+ "lights": [
+  {
+   "name": "PorchLight",
+   "type": "POINT",
+   "pos": [
+    0.33238,
+    1.94,
+    0.42176
+   ],
+   "dir": [
+    0.0,
+    -1.0,
+    -0.0
+   ],
+   "color": [
+    1.0,
+    0.56,
+    0.22
+   ],
+   "energy": 90.0,
+   "radius": 0.08
+  },
+  {
+   "name": "WinSpillFront",
+   "type": "POINT",
+   "pos": [
+    0.5739,
+    1.69,
+    0.12395
+   ],
+   "dir": [
+    0.0,
+    -1.0,
+    -0.0
+   ],
+   "color": [
+    1.0,
+    0.55,
+    0.2
+   ],
+   "energy": 70.0,
+   "radius": 0.18
+  },
+  {
+   "name": "WinSpillDoor",
+   "type": "POINT",
+   "pos": [
+    -0.27658,
+    1.84,
+    -0.36551
+   ],
+   "dir": [
+    0.0,
+    -1.0,
+    -0.0
+   ],
+   "color": [
+    1.0,
+    0.55,
+    0.2
+   ],
+   "energy": 35.0,
+   "radius": 0.18
+  },
+  {
+   "name": "WinSpillSideA",
+   "type": "POINT",
+   "pos": [
+    2.36604,
+    1.64,
+    -0.59589
+   ],
+   "dir": [
+    0.0,
+    -1.0,
+    -0.0
+   ],
+   "color": [
+    1.0,
+    0.55,
+    0.2
+   ],
+   "energy": 45.0,
+   "radius": 0.18
+  },
+  {
+   "name": "WinSpillSideB",
+   "type": "POINT",
+   "pos": [
+    3.00163,
+    1.64,
+    -1.8433
+   ],
+   "dir": [
+    0.0,
+    -1.0,
+    -0.0
+   ],
+   "color": [
+    1.0,
+    0.55,
+    0.2
+   ],
+   "energy": 45.0,
+   "radius": 0.18
+  },
+  {
+   "name": "MillLantern",
+   "type": "POINT",
+   "pos": [
+    -2.5365,
+    2.58786,
+    -1.43916
+   ],
+   "dir": [
+    0.0,
+    -1.0,
+    -0.0
+   ],
+   "color": [
+    1.0,
+    0.56,
+    0.22
+   ],
+   "energy": 28.0,
+   "radius": 0.06
+  },
+  {
+   "name": "DockLantern",
+   "type": "POINT",
+   "pos": [
+    3.6126,
+    0.73,
+    1.67431
+   ],
+   "dir": [
+    0.0,
+    -1.0,
+    -0.0
+   ],
+   "color": [
+    1.0,
+    0.56,
+    0.22
+   ],
+   "energy": 26.0,
+   "radius": 0.05
+  },
+  {
+   "name": "PostLantern",
+   "type": "POINT",
+   "pos": [
+    -1.29739,
+    1.21916,
+    1.70197
+   ],
+   "dir": [
+    0.0,
+    -1.0,
+    -0.0
+   ],
+   "color": [
+    1.0,
+    0.56,
+    0.22
+   ],
+   "energy": 70.0,
+   "radius": 0.07
+  },
+  {
+   "name": "CrystalGlow0",
+   "type": "POINT",
+   "pos": [
+    -4.70391,
+    -3.58744,
+    1.97163
+   ],
+   "dir": [
+    0.0,
+    -1.0,
+    -0.0
+   ],
+   "color": [
+    0.2,
+    0.85,
+    1.0
+   ],
+   "energy": 45.0,
+   "radius": 0.25
+  },
+  {
+   "name": "CrystalGlow1",
+   "type": "POINT",
+   "pos": [
+    -0.81407,
+    -4.78346,
+    3.33873
+   ],
+   "dir": [
+    0.0,
+    -1.0,
+    -0.0
+   ],
+   "color": [
+    0.2,
+    0.85,
+    1.0
+   ],
+   "energy": 45.0,
+   "radius": 0.25
+  },
+  {
+   "name": "CrystalGlow2",
+   "type": "POINT",
+   "pos": [
+    3.97862,
+    -3.28604,
+    3.55231
+   ],
+   "dir": [
+    0.0,
+    -1.0,
+    -0.0
+   ],
+   "color": [
+    0.2,
+    0.85,
+    1.0
+   ],
+   "energy": 45.0,
+   "radius": 0.25
+  },
+  {
+   "name": "BalloonBurner",
+   "type": "POINT",
+   "pos": [
+    -18.40553,
+    0.37892,
+    -14.35437
+   ],
+   "dir": [
+    0.0,
+    -1.0,
+    -0.0
+   ],
+   "color": [
+    1.0,
+    0.5,
+    0.15
+   ],
+   "energy": 420.0,
+   "radius": 0.15
+  },
+  {
+   "name": "Sun",
+   "type": "SUN",
+   "pos": [
+    24.19838,
+    12.2021,
+    -12.86651
+   ],
+   "dir": [
+    -0.80661,
+    -0.40674,
+    0.42888
+   ],
+   "color": [
+    1.0,
+    0.56,
+    0.28
+   ],
+   "energy": 10.0
+  },
+  {
+   "name": "SkyFill",
+   "type": "SUN",
+   "pos": [
+    -15.0,
+    14.0,
+    22.0
+   ],
+   "dir": [
+    0.49629,
+    -0.44666,
+    -0.74444
+   ],
+   "color": [
+    0.42,
+    0.58,
+    1.0
+   ],
+   "energy": 0.6
+  },
+  {
+   "name": "UnderBounce",
+   "type": "SUN",
+   "pos": [
+    8.0,
+    -18.0,
+    10.0
+   ],
+   "dir": [
+    -0.44998,
+    0.73996,
+    -0.49997
+   ],
+   "color": [
+    1.0,
+    0.6,
+    0.48
+   ],
+   "energy": 2.0
+  },
+  {
+   "name": "RimCool",
+   "type": "SUN",
+   "pos": [
+    -24.0,
+    9.0,
+    -15.0
+   ],
+   "dir": [
+    0.80812,
+    -0.30305,
+    0.50508
+   ],
+   "color": [
+    0.5,
+    0.62,
+    1.0
+   ],
+   "energy": 0.7
+  }
+ ],
+ "world": {
+  "color": [
+   0.8,
+   0.8,
+   0.8
+  ],
+  "strength": 1.0,
+  "procedural": true
+ },
+ "fog_volumes": [],
+ "atlas": {
+  "px": 4096,
+  "emit_scale": 1.817,
+  "emit": true,
+  "rough": false,
+  "objects": 93
+ },
+ "stats": {
+  "objects_in_blender": 110,
+  "meshes_joined": 93,
+  "triangles": 50312,
+  "materials": 11,
+  "glb_bytes": 3159744
+ },
+ "bounds": {
+  "min": [
+   -279.25711,
+   -98.09106,
+   10.94473
+  ],
+  "max": [
+   289.75595,
+   13.88949,
+   -471.84097
+  ]
+ }
+}

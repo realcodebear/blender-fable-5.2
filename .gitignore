@@ -1,0 +1,8 @@
+_src/
+out/
+dev.html
+.DS_Store
+*.blend1
+__pycache__/
+tools/om.sh
+tools/export_all.sh

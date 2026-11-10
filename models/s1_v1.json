@@ -1,0 +1,158 @@
+{
+ "key": "s1_v1",
+ "file": "S1_StillLife_v1.blend",
+ "camera": {
+  "pos": [
+   1.45,
+   1.22,
+   2.05
+  ],
+  "dir": [
+   -0.56134,
+   -0.15485,
+   -0.81297
+  ],
+  "vfov": 18.55,
+  "focus": 2.686,
+  "near": 0.10000000149011612,
+  "far": 1000.0
+ },
+ "view": {
+  "transform": "AgX",
+  "look": "None",
+  "exposure": 0.20000000298023224,
+  "gamma": 1.0
+ },
+ "lights": [
+  {
+   "name": "LampSpot",
+   "type": "SPOT",
+   "pos": [
+    -0.10219,
+    1.03464,
+    -0.11155
+   ],
+   "dir": [
+    -0.02432,
+    -0.9484,
+    0.31613
+   ],
+   "color": [
+    1.0,
+    0.72,
+    0.42
+   ],
+   "energy": 45.0,
+   "angle": 2.0071,
+   "blend": 0.5,
+   "radius": 0.03
+  },
+  {
+   "name": "Key",
+   "type": "AREA",
+   "pos": [
+    -2.6,
+    2.6,
+    2.2
+   ],
+   "dir": [
+    0.65997,
+    -0.50259,
+    -0.55843
+   ],
+   "color": [
+    0.72,
+    0.84,
+    1.0
+   ],
+   "energy": 70.0,
+   "size": [
+    2.2,
+    2.2
+   ]
+  },
+  {
+   "name": "Rim",
+   "type": "AREA",
+   "pos": [
+    2.4,
+    1.9,
+    -1.6
+   ],
+   "dir": [
+    -0.77922,
+    -0.35065,
+    0.51948
+   ],
+   "color": [
+    1.0,
+    0.6,
+    0.35
+   ],
+   "energy": 110.0,
+   "size": [
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "name": "WallGlow",
+   "type": "SPOT",
+   "pos": [
+    0.4,
+    0.25,
+    0.5
+   ],
+   "dir": [
+    -0.02878,
+    0.50366,
+    -0.86342
+   ],
+   "color": [
+    0.2,
+    0.75,
+    0.8
+   ],
+   "energy": 60.0,
+   "angle": 1.6581,
+   "blend": 1.0,
+   "radius": 0.4
+  }
+ ],
+ "world": {
+  "color": [
+   0.02,
+   0.03,
+   0.04
+  ],
+  "strength": 1.0,
+  "procedural": false
+ },
+ "fog_volumes": [],
+ "atlas": {
+  "px": 2048,
+  "emit_scale": 1.0,
+  "emit": false,
+  "rough": true,
+  "objects": 1
+ },
+ "stats": {
+  "objects_in_blender": 44,
+  "meshes_joined": 39,
+  "triangles": 19076,
+  "materials": 17,
+  "glb_bytes": 438312
+ },
+ "bounds": {
+  "min": [
+   -7.0,
+   -0.00193,
+   5.0
+  ],
+  "max": [
+   7.0,
+   6.0,
+   -2.6
+  ]
+ }
+}

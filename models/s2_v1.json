@@ -1,0 +1,192 @@
+{
+ "key": "s2_v1",
+ "file": "S2_FloatingIsland_v1.blend",
+ "camera": {
+  "pos": [
+   14.0,
+   4.0,
+   18.5
+  ],
+  "dir": [
+   -0.58147,
+   -0.22844,
+   -0.78084
+  ],
+  "vfov": 36.175,
+  "focus": 23.463,
+  "near": 0.10000000149011612,
+  "far": 1000.0
+ },
+ "view": {
+  "transform": "AgX",
+  "look": "None",
+  "exposure": -0.30000001192092896,
+  "gamma": 1.0
+ },
+ "lights": [
+  {
+   "name": "WinLightF",
+   "type": "POINT",
+   "pos": [
+    -0.2,
+    1.03,
+    -0.17
+   ],
+   "dir": [
+    0.0,
+    -1.0,
+    -0.0
+   ],
+   "color": [
+    1.0,
+    0.6,
+    0.25
+   ],
+   "energy": 40.0,
+   "radius": 0.3
+  },
+  {
+   "name": "WinLightS",
+   "type": "POINT",
+   "pos": [
+    0.9,
+    1.03,
+    -1.8
+   ],
+   "dir": [
+    0.0,
+    -1.0,
+    -0.0
+   ],
+   "color": [
+    1.0,
+    0.6,
+    0.25
+   ],
+   "energy": 40.0,
+   "radius": 0.3
+  },
+  {
+   "name": "LanternLight",
+   "type": "POINT",
+   "pos": [
+    0.0,
+    1.20912,
+    0.48
+   ],
+   "dir": [
+    0.0,
+    -1.0,
+    -0.0
+   ],
+   "color": [
+    1.0,
+    0.62,
+    0.25
+   ],
+   "energy": 25.0,
+   "radius": 0.1
+  },
+  {
+   "name": "Burner",
+   "type": "POINT",
+   "pos": [
+    -12.0,
+    0.8,
+    3.0
+   ],
+   "dir": [
+    0.0,
+    -1.0,
+    -0.0
+   ],
+   "color": [
+    1.0,
+    0.5,
+    0.15
+   ],
+   "energy": 60.0,
+   "radius": 0.15
+  },
+  {
+   "name": "Sun",
+   "type": "SUN",
+   "pos": [
+    14.0,
+    5.5,
+    5.0
+   ],
+   "dir": [
+    -0.88323,
+    -0.34698,
+    -0.31544
+   ],
+   "color": [
+    1.0,
+    0.68,
+    0.45
+   ],
+   "energy": 4.5
+  },
+  {
+   "name": "SkyFill",
+   "type": "AREA",
+   "pos": [
+    -10.0,
+    10.0,
+    12.0
+   ],
+   "dir": [
+    0.53916,
+    -0.53916,
+    -0.647
+   ],
+   "color": [
+    0.45,
+    0.55,
+    1.0
+   ],
+   "energy": 1500.0,
+   "size": [
+    12.0,
+    12.0
+   ]
+  }
+ ],
+ "world": {
+  "color": [
+   0.0,
+   0.0,
+   0.0
+  ],
+  "strength": 0.9,
+  "procedural": true
+ },
+ "fog_volumes": [],
+ "atlas": {
+  "px": 2048,
+  "emit_scale": 1.0,
+  "emit": true,
+  "rough": false,
+  "objects": 7
+ },
+ "stats": {
+  "objects_in_blender": 343,
+  "meshes_joined": 335,
+  "triangles": 13020,
+  "materials": 23,
+  "glb_bytes": 520676
+ },
+ "bounds": {
+  "min": [
+   -17.76621,
+   -10.94377,
+   5.83671
+  ],
+  "max": [
+   18.23962,
+   6.22423,
+   -14.29086
+  ]
+ }
+}

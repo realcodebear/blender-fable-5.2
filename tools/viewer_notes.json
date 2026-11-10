@@ -1,0 +1,5 @@
+{
+ "s1": "the wood, cloth, glaze and brass patterns are baked into one texture, so they go soft when you zoom far in. Surface bumps are flat. The steam over the mug is a volume and is not shown. Light is real-time: no bounce light, no soft depth of field, and the lamp light is harder than in the render.",
+ "s2": "colours are baked into a texture. The sunset sky is a still panorama taken from the Blender file. Sun shadows are real-time and sharper, with no bounce light. The waterfall and smoke are see-through surfaces without the soft light scatter.",
+ "s3": "the fog is simple distance fog, not volumetric, so there are no light shafts or searchlight beams. Only the strongest few lamps light the street; the rest of the glow comes from the neon itself plus bloom. The wet road is one flat mirror layer, not the puddle map from the render. Window and sign patterns are baked into a texture and go soft up close. Rain is frozen in place."
+}

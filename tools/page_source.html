@@ -1,0 +1,820 @@
+<title>Blender Effort Test</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a dark 3D-viewport page. Hero = three tall render crops over a floor grid. Each scene = big before/after stage, a stat strip, then lacked / added lists. Cost and prompts close it. */
+:root {
+  color-scheme: dark;
+  --bg: #131417;           /* viewport grey, slightly cool */
+  --bg-2: #181a1e;
+  --panel: #1e2025;
+  --panel-2: #272a30;
+  --line: #31353c;
+  --grid: rgba(255,255,255,.045);
+  --fg: #eef0f3;
+  --soft: #cfd3da;
+  --muted: #949ba6;
+  --v1: #8d96a5;           /* first pass = steel */
+  --v2: #ff8a1f;           /* max effort = Blender selection orange */
+  --v2-soft: #ffb066;
+  --write: #f2c078;        /* new input written to cache */
+  --read: #6f8fb3;         /* cached input re-read */
+  --bad: #ff6b5e;
+  --display: "Space Grotesk", "Inter", system-ui, sans-serif;
+  --body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --r: 14px;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 16px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--bg); }
+.gut { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.in { max-width: 1180px; margin: 0 auto; }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(2.3rem, 6.4vw, 4.6rem); line-height: 1; font-weight: 700; letter-spacing: -0.035em; }
+h2 { font-size: clamp(1.8rem, 4vw, 2.9rem); line-height: 1.05; font-weight: 600; letter-spacing: -0.025em; }
+h3 { font-size: 1.02rem; font-weight: 600; letter-spacing: -0.005em; }
+p { margin: 0; }
+.eyebrow { font-family: var(--mono); font-size: .74rem; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.v1c { color: var(--v1); } .v2c { color: var(--v2); }
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--v2); outline-offset: 3px; border-radius: 6px; }
+
+/* sticky nav */
+.nav { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: rgba(19,20,23,.82); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid var(--line); }
+.nav .in { display: flex; align-items: center; gap: 18px; height: 52px; }
+.brand { font-family: var(--display); font-weight: 600; letter-spacing: -0.01em; display: flex; align-items: center; gap: 10px; white-space: nowrap; }
+.brand i { width: 10px; height: 10px; border-radius: 2px; background: var(--v2); transform: rotate(45deg); }
+.nav nav { display: flex; gap: 4px; margin-left: auto; overflow-x: auto; scrollbar-width: none; }
+.nav nav::-webkit-scrollbar { display: none; }
+.nav nav a { font-family: var(--mono); font-size: .76rem; color: var(--muted); text-decoration: none; padding: 7px 11px; border-radius: 999px; white-space: nowrap; }
+.nav nav a:hover { color: var(--fg); background: var(--panel-2); }
+
+/* hero */
+.hero { position: relative; overflow: hidden; border-bottom: 1px solid var(--line); background: linear-gradient(180deg, var(--bg-2), var(--bg)); }
+.hero::before { content: ""; position: absolute; inset: 0; pointer-events: none;
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 56px 56px; -webkit-mask-image: radial-gradient(120% 90% at 50% 0%, #000 20%, transparent 75%); mask-image: radial-gradient(120% 90% at 50% 0%, #000 20%, transparent 75%); }
+.hero .in { position: relative; display: grid; gap: 28px; padding-block: 64px 56px; }
+.hero h1 span { display: block; }
+.lede { color: var(--soft); font-size: clamp(1.02rem, 1.6vw, 1.2rem); max-width: 60ch; }
+.trip { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 8px; }
+.trip a { position: relative; display: block; aspect-ratio: 4 / 5; border-radius: var(--r); overflow: hidden; text-decoration: none; background: #000; }
+.trip img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .6s cubic-bezier(.2,.7,.2,1); }
+.trip a:hover img { transform: scale(1.04); }
+.trip a::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 45%, rgba(8,9,11,.88)); }
+.trip .cap { position: absolute; left: 16px; right: 16px; bottom: 14px; z-index: 1; display: grid; gap: 2px; }
+.trip .cap b { font-family: var(--display); font-size: clamp(1rem, 1.8vw, 1.3rem); font-weight: 600; letter-spacing: -0.01em; }
+.trip .cap span { font-family: var(--mono); font-size: .7rem; letter-spacing: .1em; text-transform: uppercase; color: var(--v2-soft); }
+.trip .was { position: absolute; top: 12px; left: 12px; z-index: 1; width: 34%; border-radius: 8px; overflow: hidden; box-shadow: 0 6px 22px rgba(0,0,0,.6); }
+.trip .was img { aspect-ratio: 16 / 9; }
+.trip .was em { position: absolute; left: 6px; bottom: 5px; font: 500 .6rem var(--mono); letter-spacing: .1em; text-transform: uppercase; font-style: normal; color: #fff; background: rgba(8,9,11,.7); padding: 2px 5px; border-radius: 3px; }
+.kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 1px; background: var(--line); border-radius: var(--r); overflow: hidden; }
+.kpi { background: var(--panel); padding: 18px 20px; min-width: 0; display: grid; gap: 6px; align-content: start; }
+.kpi b { font-family: var(--display); font-size: clamp(1.25rem, 2.3vw, 1.75rem); font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.kpi b s { text-decoration: none; color: var(--v1); font-weight: 500; }
+.kpi b u { text-decoration: none; color: var(--muted); font-weight: 400; padding: 0 .15em; }
+.kpi span { color: var(--muted); font-size: .84rem; line-height: 1.35; }
+
+/* scene sections */
+.scene { padding-block: 88px 24px; }
+.scene .in { display: grid; gap: 26px; }
+.scene-head { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px 26px; align-items: end; }
+.num { font-family: var(--display); font-weight: 700; font-size: clamp(4rem, 11vw, 8.5rem); line-height: .8; letter-spacing: -0.06em; color: transparent; -webkit-text-stroke: 1.5px var(--line); grid-row: span 2; }
+.scene-head p.desc { color: var(--soft); max-width: 62ch; grid-column: 2; }
+.scene-head .ttl { display: grid; gap: 10px; }
+
+.stage { display: grid; gap: 12px; }
+.cmp { --pos: 50%; position: relative; aspect-ratio: 16 / 9; max-width: 100%; border-radius: var(--r); overflow: hidden; background: #000; user-select: none; box-shadow: 0 30px 80px -30px rgba(0,0,0,.9), 0 0 0 1px var(--line); }
+.cmp img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.cmp .before { clip-path: inset(0 calc(100% - var(--pos)) 0 0); }
+.cmp.anim .before, .cmp.anim .bar, .cmp.anim .knob { transition: all .7s cubic-bezier(.3,.7,.2,1); }
+.cmp .bar { position: absolute; top: 0; bottom: 0; left: var(--pos); width: 2px; margin-left: -1px; background: #fff; pointer-events: none; }
+.cmp .knob { position: absolute; top: 50%; left: var(--pos); width: 46px; height: 46px; margin: -23px 0 0 -23px; border-radius: 50%; background: #fff; color: #131417; display: grid; place-items: center; font: 500 .8rem var(--mono); pointer-events: none; box-shadow: 0 6px 22px rgba(0,0,0,.55); }
+.cmp .tag { position: absolute; top: 14px; font: 500 .7rem var(--mono); letter-spacing: .1em; text-transform: uppercase; padding: 6px 10px; border-radius: 6px; background: rgba(10,11,13,.78); pointer-events: none; }
+.cmp .tag.l { left: 14px; color: var(--soft); } .cmp .tag.r { right: 14px; color: var(--v2); }
+.cmp input[type=range] { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: ew-resize; }
+.cmp:has(input:focus-visible) { outline: 2px solid var(--v2); outline-offset: 4px; }
+.ctrl { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ctrl span { font: 400 .76rem var(--mono); color: var(--muted); margin-right: auto; }
+.ctrl button { font: 500 .76rem var(--mono); letter-spacing: .04em; color: var(--fg); background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px; cursor: pointer; }
+.ctrl button:hover { background: var(--panel-2); }
+.ctrl button.on { border-color: var(--v2); color: var(--v2); }
+
+.stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 1px; background: var(--line); border-radius: var(--r); overflow: hidden; }
+.stat { background: var(--panel); padding: 15px 18px; min-width: 0; display: grid; gap: 5px; }
+.stat .k { font: 400 .68rem var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.stat .row { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; font-variant-numeric: tabular-nums; }
+.stat .a { color: var(--v1); font-size: .95rem; }
+.stat .arrow { color: var(--muted); font-size: .8rem; }
+.stat .b { font-family: var(--display); font-weight: 600; font-size: 1.25rem; letter-spacing: -0.01em; }
+.aside { color: var(--muted); font-size: .92rem; max-width: 76ch; }
+.aside code, li code { font-family: var(--mono); font-size: .86em; background: var(--panel-2); padding: 1px 6px; border-radius: 4px; }
+
+.cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.col { background: var(--panel); border-radius: var(--r); padding: 24px 26px; min-width: 0; display: grid; gap: 16px; align-content: start; }
+.col.plus { background: linear-gradient(180deg, rgba(255,138,31,.09), rgba(255,138,31,0) 42%), var(--panel); }
+.col h3 { display: flex; align-items: center; gap: 10px; }
+.col h3 small { font: 400 .68rem var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-left: auto; }
+.col ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 11px; color: var(--soft); font-size: .96rem; line-height: 1.5; }
+.col li { position: relative; padding-left: 26px; }
+.col li::before { position: absolute; left: 0; top: 0; font: 500 .95rem var(--mono); }
+.col.minus li::before { content: "–"; color: var(--v1); }
+.col.plus li::before { content: "+"; color: var(--v2); }
+.col.still li::before { content: "!"; color: var(--bad); }
+.col li b { color: var(--fg); font-weight: 600; }
+.col.still { background: transparent; box-shadow: inset 0 0 0 1px var(--line); }
+.col.still ul { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 28px; }
+.takeaway { font-family: var(--display); font-size: clamp(1.25rem, 2.4vw, 1.75rem); line-height: 1.25; font-weight: 500; letter-spacing: -0.015em; max-width: 30ch; padding-left: 20px; border-left: 2px solid var(--v2); margin-top: 6px; }
+.takeaway em { font-style: normal; color: var(--v2); }
+
+.open { background: var(--panel); border-radius: var(--r); padding: 20px 24px; display: grid; gap: 12px; min-width: 0; }
+.open h3 { display: flex; align-items: center; gap: 10px; }
+.open h3 small { font: 400 .68rem var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-left: auto; }
+.orow { display: grid; grid-template-columns: 130px minmax(0, 1fr) auto; gap: 8px 14px; align-items: center; }
+.olab { font: 400 .7rem var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.ocmd { font: 400 .8rem var(--mono); color: var(--soft); background: var(--bg); border-radius: 8px; padding: 9px 12px; overflow-x: auto; white-space: nowrap; min-width: 0; display: block; user-select: all; }
+.ocopy { font: 500 .74rem var(--mono); color: #131417; background: var(--v2); border: 0; border-radius: 999px; padding: 8px 14px; cursor: pointer; white-space: nowrap; }
+.ocopy:hover { background: var(--v2-soft); }
+.onote { grid-column: 2 / -1; font-size: .84rem; color: var(--muted); margin-top: -4px; }
+.sp { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.spcol { background: var(--panel); border-radius: var(--r); padding: 22px 24px; display: grid; gap: 12px; align-content: start; min-width: 0; }
+.spcol.hot { box-shadow: inset 0 0 0 1px rgba(255,138,31,.35); }
+.spcol .who { font: 400 .68rem var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); display: flex; gap: 10px; flex-wrap: wrap; }
+.spcol .who b { color: var(--v2); font-weight: 500; } .spcol .who b.s1 { color: var(--soft); }
+.spcol blockquote { margin: 0; font-family: var(--display); font-size: clamp(1.05rem, 1.7vw, 1.3rem); line-height: 1.35; letter-spacing: -0.01em; }
+.spnote { color: var(--muted); font-size: .88rem; }
+.spcol details { background: var(--bg); }
+.spcol summary { padding: 13px 16px; font-size: .95rem; }
+.spcol pre { max-height: 420px; }
+@media (max-width: 900px) { .sp { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 900px) { .orow { grid-template-columns: minmax(0, 1fr); } .onote { grid-column: 1; } .ocopy { justify-self: start; } }
+
+blockquote.zoom { cursor: zoom-in; border-radius: 8px; transition: color .15s; }
+blockquote.zoom:hover { color: var(--v2-soft); }
+button.big { position: absolute; top: 12px; right: 78px; font: 500 .7rem var(--mono); background: var(--panel-2); color: var(--fg); border: 0; border-radius: 6px; padding: 6px 10px; cursor: pointer; }
+button.big:hover { background: var(--v2); color: #131417; }
+dialog.modal { border: 0; padding: 0; margin: auto; width: min(1100px, calc(100vw - 32px)); max-height: calc(100vh - 48px); background: var(--panel); color: var(--fg); border-radius: 18px; box-shadow: 0 40px 120px rgba(0,0,0,.8), 0 0 0 1px var(--line); overflow: hidden; }
+dialog.modal::backdrop { background: rgba(6,7,9,.82); backdrop-filter: blur(6px); }
+dialog.modal[open] { display: grid; grid-template-rows: auto minmax(0, 1fr); animation: pop .22s cubic-bezier(.2,.8,.2,1); }
+@keyframes pop { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: none; } }
+.mhead { display: flex; align-items: center; gap: 12px; padding: 16px 20px 16px 28px; border-bottom: 1px solid var(--line); }
+.mhead .mwho { font: 400 .74rem var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--v2); margin-right: auto; }
+.mhead button { font: 500 .74rem var(--mono); background: var(--panel-2); color: var(--fg); border: 0; border-radius: 999px; padding: 8px 14px; cursor: pointer; }
+.mhead button:hover { background: var(--v2); color: #131417; }
+.mbody { overflow: auto; padding: 40px 48px 52px; max-height: calc(100vh - 48px - 66px); }
+.mbody.short { display: grid; place-items: center; min-height: min(56vh, 520px); }
+.mbody.short p { font-family: var(--display); font-weight: 500; font-size: clamp(1.7rem, 4.6vw, 3.6rem); line-height: 1.15; letter-spacing: -0.03em; text-wrap: balance; max-width: 22ch; text-align: center; }
+.mbody.long p { font: 400 clamp(.95rem, 1.35vw, 1.12rem)/1.75 var(--mono); color: var(--soft); white-space: pre-wrap; word-break: break-word; max-width: 92ch; margin: 0 auto; }
+@media (max-width: 640px) { .mbody { padding: 26px 22px 34px; } button.big { right: 74px; } }
+@media (prefers-reduced-motion: reduce) { dialog.modal[open] { animation: none; } }
+
+/* cost */
+.band { background: var(--bg-2); border-block: 1px solid var(--line); margin-top: 72px; }
+.band .scene { padding-block: 72px 72px; }
+.duel { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1.5fr); gap: 14px; align-items: stretch; }
+.price { background: var(--panel); border-radius: var(--r); padding: 26px 28px; display: grid; gap: 6px; align-content: start; min-width: 0; }
+.price.big { background: linear-gradient(135deg, rgba(255,138,31,.16), rgba(255,138,31,.02) 60%), var(--panel); }
+.price .amt { font-family: var(--display); font-weight: 700; font-size: clamp(2.6rem, 7vw, 4.8rem); line-height: 1; letter-spacing: -0.045em; font-variant-numeric: tabular-nums; }
+.price .amt sup { font-size: .42em; font-weight: 500; vertical-align: top; position: relative; top: .25em; margin-right: .06em; color: var(--muted); }
+.price p { color: var(--muted); font-size: .92rem; }
+.times { display: grid; place-items: center; font-family: var(--display); font-weight: 600; font-size: 1.1rem; color: var(--muted); padding: 0 6px; text-align: center; }
+.times b { display: block; color: var(--v2); font-size: clamp(1.5rem, 3vw, 2.2rem); letter-spacing: -0.03em; }
+.bars { display: grid; gap: 14px; background: var(--panel); border-radius: var(--r); padding: 26px 28px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: .84rem; color: var(--soft); }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 7px; vertical-align: -1px; }
+.barrow { display: grid; grid-template-columns: 180px minmax(0, 1fr) 82px; gap: 16px; align-items: center; }
+.barrow .lab { font-size: .93rem; }
+.barrow .lab small { display: block; color: var(--muted); font-size: .78rem; }
+.track { display: flex; height: 26px; background: var(--panel-2); border-radius: 6px; overflow: hidden; }
+.track i { display: block; height: 100%; }
+.barrow .val { font: 500 .95rem var(--display); text-align: right; font-variant-numeric: tabular-nums; }
+.tablewrap { overflow-x: auto; border-radius: var(--r); background: var(--panel); }
+table { border-collapse: collapse; width: 100%; min-width: 860px; font-variant-numeric: tabular-nums; font-size: .93rem; }
+th, td { text-align: right; padding: 13px 16px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; white-space: normal; min-width: 210px; }
+th { font: 500 .66rem var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+tr:last-child td { border-bottom: 0; }
+tr.sum td { font-weight: 600; background: var(--panel-2); }
+td small { display: block; color: var(--muted); font-size: .8rem; font-weight: 400; }
+td.cost { font-family: var(--display); font-weight: 600; color: var(--v2-soft); }
+.rates { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background: var(--line); border-radius: var(--r); overflow: hidden; }
+.rate { background: var(--panel); padding: 14px 18px; display: grid; gap: 3px; min-width: 0; }
+.rate b { font: 600 1.15rem var(--display); font-variant-numeric: tabular-nums; }
+.rate span { font-size: .8rem; color: var(--muted); line-height: 1.35; }
+
+/* prompts */
+.prompts { display: grid; gap: 12px; }
+.pgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.prompt { background: var(--panel); border-radius: var(--r); padding: 20px 22px; display: grid; gap: 12px; min-width: 0; align-content: start; }
+.prompt .who { font: 400 .68rem var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); display: flex; gap: 10px; flex-wrap: wrap; }
+.prompt .who b { color: var(--v2); font-weight: 500; }
+.prompt blockquote { margin: 0; font-family: var(--display); font-size: clamp(1.05rem, 1.7vw, 1.3rem); line-height: 1.35; letter-spacing: -0.01em; }
+details { background: var(--panel); border-radius: var(--r); min-width: 0; }
+summary { cursor: pointer; padding: 18px 22px; font-family: var(--display); font-weight: 600; display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; list-style: none; }
+summary::-webkit-details-marker { display: none; }
+summary::before { content: "+"; font-family: var(--mono); color: var(--v2); width: 1ch; }
+details[open] summary::before { content: "–"; }
+summary span { font: 400 .74rem var(--mono); color: var(--muted); }
+.pre { position: relative; border-top: 1px solid var(--line); }
+pre { margin: 0; padding: 20px 22px 24px; white-space: pre-wrap; word-break: break-word; font: 400 .8rem/1.65 var(--mono); color: var(--soft); max-height: 560px; overflow: auto; }
+button.copy { position: absolute; top: 12px; right: 14px; font: 500 .7rem var(--mono); background: var(--panel-2); color: var(--fg); border: 0; border-radius: 6px; padding: 6px 10px; cursor: pointer; }
+button.copy:hover { background: var(--v2); color: #131417; }
+footer { padding-block: 40px 96px; color: var(--muted); font-size: .86rem; }
+footer .in { display: grid; gap: 8px; max-width: 1180px; }
+footer p { max-width: 90ch; }
+
+@media (max-width: 900px) {
+  .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .kpi:last-child { grid-column: 1 / -1; }
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stat:last-child { grid-column: 1 / -1; }
+  .cols, .pgrid { grid-template-columns: minmax(0, 1fr); }
+  .col.still ul { grid-template-columns: minmax(0, 1fr); }
+  .duel { grid-template-columns: minmax(0, 1fr); }
+  .times { padding: 4px 0; }
+  .rates { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .barrow { grid-template-columns: minmax(0, 1fr) 72px; }
+  .barrow .lab { grid-column: 1 / -1; margin-bottom: -8px; }
+  .scene { padding-block: 64px 16px; }
+  .scene-head { grid-template-columns: minmax(0, 1fr); }
+  .num { grid-row: auto; font-size: 4.2rem; }
+  .scene-head p.desc { grid-column: 1; }
+  .brand span { display: none; }
+}
+@media (max-width: 560px) {
+  .trip { grid-template-columns: minmax(0, 1fr); }
+  .trip a { aspect-ratio: 16 / 10; }
+  .trip .was { width: 28%; }
+  .cmp .knob { width: 36px; height: 36px; margin: -18px 0 0 -18px; }
+  .col { padding: 20px; }
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .trip img, .cmp.anim .before, .cmp.anim .bar, .cmp.anim .knob { transition: none; } }
+</style>
+
+<div class="nav gut"><div class="in">
+  <a class="brand" href="#top" style="text-decoration:none"><i></i>Effort Test <span class="eyebrow" style="letter-spacing:.1em">· Blender</span></a>
+  <nav aria-label="Sections"><a href="#still-life">01 Still life</a><a href="#island">02 Island</a><a href="#city">03 City</a><a href="#cost">Cost</a><a href="#prompts">Prompts</a></nav>
+</div></div>
+
+<header class="hero gut" id="top"><div class="in">
+  <p class="eyebrow">Blender 5.2.1 · Cycles · 1920×1080 · all Python, no assets</p>
+  <h1><span>Same three scenes.</span><span><span class="v1c">One quick pass</span> vs <span class="v2c">max effort.</span></span></h1>
+  <p class="lede">Three Blender scenes were written as Python scripts. First in one fast session. Then again by three separate agents at max effort, one scene each, told what the first versions got wrong.</p>
+  <div class="trip">
+    <a href="#still-life"><img src="img/s1_v2.jpg" alt="Max-effort still life"><div class="was"><img src="img/s1_v1.jpg" alt="First-pass still life"><em>v1</em></div><div class="cap"><span>01 · simple</span><b>Lamp-lit still life</b></div></a>
+    <a href="#island"><img src="img/s2_v2.jpg" alt="Max-effort floating island"><div class="was"><img src="img/s2_v1.jpg" alt="First-pass floating island"><em>v1</em></div><div class="cap"><span>02 · medium</span><b>Floating island</b></div></a>
+    <a href="#city"><img src="img/s3_v2.jpg" alt="Max-effort neon city"><div class="was"><img src="img/s3_v1.jpg" alt="First-pass neon city"><em>v1</em></div><div class="cap"><span>03 · complex</span><b>Rainy neon city</b></div></a>
+  </div>
+  <div class="kpis">
+    <div class="kpi"><b><s>$6</s><u>→</u>$119</b><span>estimated cost at API list price</span></div>
+    <div class="kpi"><b><s>71K</s><u>→</u>1.17M</b><span>output tokens written</span></div>
+    <div class="kpi"><b><s>1,107</s><u>→</u>8,740</b><span>lines of scene code</span></div>
+    <div class="kpi"><b><s>21</s><u>→</u>219 min</b><span>model working time, approx.</span></div>
+    <div class="kpi"><b><s>107</s><u>→</u>366 s</b><span>render time for three stills</span></div>
+  </div>
+</div></header>
+
+<!-- ============ SCENE 1 ============ -->
+<section class="scene gut" id="still-life"><div class="in">
+  <div class="scene-head">
+    <div class="num" aria-hidden="true">01</div>
+    <div class="ttl"><p class="eyebrow">Scene 1 · simple, but not basic</p><h2>Lamp-lit still life</h2></div>
+    <p class="desc">A side table with a brass lamp, three books, a mug, a plant and two oranges. Same subject both times.</p>
+  </div>
+  <div class="stage">
+    <div class="cmp" data-cmp>
+      <img src="img/s1_v2.jpg" alt="Version 2 of the still life: detailed brass lamp, bound books with titles, glasses, steaming mug">
+      <img class="before" src="img/s1_v1.jpg" alt="Version 1 of the still life: plain cone lamp, flat books, plain mug">
+      <span class="bar"></span><span class="knob">◂▸</span>
+      <span class="tag l">v1 · quick pass</span><span class="tag r">v2 · max effort</span>
+      <input type="range" id="cmp-s1" min="0" max="100" value="50" aria-label="Slide between version 1 and version 2 of the still life">
+    </div>
+    <div class="ctrl"><span>Drag the image, or jump:</span><button type="button" data-to="100">Show v1</button><button type="button" data-to="50">Split</button><button type="button" data-to="0">Show v2</button></div>
+  </div>
+  <div class="stats">
+    <div class="stat"><span class="k">Objects</span><div class="row"><span class="a">44</span><span class="arrow">→</span><span class="b">127</span></div></div>
+    <div class="stat"><span class="k">Script lines</span><div class="row"><span class="a">153</span><span class="arrow">→</span><span class="b">2,041</span></div></div>
+    <div class="stat"><span class="k">Materials</span><div class="row"><span class="a">17</span><span class="arrow">→</span><span class="b">37</span></div></div>
+    <div class="stat"><span class="k">Render</span><div class="row"><span class="a">14 s</span><span class="arrow">→</span><span class="b">121 s</span></div></div>
+    <div class="stat"><span class="k">Est. cost</span><div class="row"><span class="a">~$2</span><span class="arrow">→</span><span class="b">$30.38</span></div></div>
+  </div>
+  <div class="open"><h3>Open in Blender <small>paste in Terminal</small></h3><div class="orow"><span class="olab">v2 · max effort</span><code class="ocmd">open -a Blender ~/code-bear-channel/blender-scenes/v2/scene1/scene1_still_life_v2.blend</code><button type="button" class="ocopy" data-cmd="open -a Blender ~/code-bear-channel/blender-scenes/v2/scene1/scene1_still_life_v2.blend">Copy command</button></div><div class="orow"><span class="olab">v1 · quick pass</span><code class="ocmd">open -a Blender ~/code-bear-channel/blender-scenes/v1/S1_StillLife_v1.blend</code><button type="button" class="ocopy" data-cmd="open -a Blender ~/code-bear-channel/blender-scenes/v1/S1_StillLife_v1.blend">Copy command</button></div></div>
+  <div class="sp"><div class="spcol"><div class="who"><b class="s1">v1 prompt</b><span>typed by the user · one prompt for all three scenes</span></div><blockquote class="zoom" tabindex="0" role="button" aria-label="Enlarge this prompt">Create 3 3d scenes with scenes in blender using blender mcp , one simple but still not a basic , second bit more complex and 3rd very complex lets go</blockquote><p class="spnote">No scene was named. The model picked the subject for each level itself.</p></div><div class="spcol hot"><div class="who"><b>v2 prompt</b><span>typed by the user</span></div><blockquote class="zoom" tabindex="0" role="button" aria-label="Enlarge this prompt">run same 3 on max effort 3 seperate agents</blockquote><p class="spnote">The main session turned that into one brief per agent. This is the exact brief for this scene:</p><details><summary>Agent brief for this scene <span>733 words</span></summary><div class="pre"><button class="big" type="button" data-big="sb1">Enlarge</button><button class="copy" type="button" data-copy="sb1">Copy</button><pre id="sb1">Build a high-quality 3D scene in Blender and render it. You own this one scene end to end. Take the time to make it look genuinely good — iterate on previews until it does.
+
+## The scene: &quot;simple, but not basic&quot; — lamp-lit still life
+A round wooden side table with a brass desk lamp, a stack of three books, a ceramic mug, a potted plant and two oranges, against a dark teal seamless backdrop. Moody warm lamp light plus a cool key and a warm rim. Shallow depth of field.
+
+A first version already exists. Your job is to make a clearly better v2 of the same idea — same subject, much higher craft. Look at the first version before you start:
+- Render: blender-scenes/renders/S1_StillLife_0001.png (Read it — it is an image)
+- Script: blender-scenes/scene1_still_life.py
+- Shared helpers: blender-scenes/common.py (mesh builders, materials, lights, camera, Cycles setup)
+
+Where v1 is weak, and where to push: geometry is primitive (lamp is a cone on a stick with no joint detail, switch, cord or bulb socket; books have no spine detail, titles or page edges; mug is plain; plant leaves are simple strips with no veins or stems; oranges are plain spheres); materials are flat (add roughness variation, fingerprints/wear, fabric or paper texture, glaze, subsurface on leaves and fruit, real wood grain with end grain on the table edge); composition and lighting can be more deliberate (light falloff on the backdrop, a visible pool of lamp light, steam from the mug, small story props such as reading glasses, a pencil, a bookmark, a coaster). Keep it a restrained still life — richer detail, not clutter.
+
+## How to work (important — two other agents are building other scenes at the same time)
+- Do NOT use the Blender MCP tools (mcp__blender__*). There is one shared GUI Blender and three agents would clobber each other. Run Blender headless from the shell instead:
+  `/Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup -P your_script.py` (Blender 5.2.1 LTS, macOS, Metal GPU).
+  With --factory-startup the GPU is not enabled by default; enable it in your script: set `bpy.context.preferences.addons[&#x27;cycles&#x27;].preferences.compute_device_type = &#x27;METAL&#x27;`, call `.get_devices()`, set every device `.use = True`, then `scene.cycles.device = &#x27;GPU&#x27;`. Verify in the render log that it is really using the GPU.
+- Work only inside blender-scenes/v2/scene1/ (create it). Do not modify or delete anything outside that folder — the v1 files and the other agents&#x27; folders are off limits. You may copy common.py into your folder and change your copy freely.
+- Blender 5.2 API notes that held true in v1: Principled BSDF inputs are named &quot;Base Color&quot;, &quot;Roughness&quot;, &quot;Metallic&quot;, &quot;IOR&quot;, &quot;Transmission Weight&quot;, &quot;Coat Weight&quot;, &quot;Subsurface Weight&quot;, &quot;Emission Color&quot;, &quot;Emission Strength&quot;, &quot;Alpha&quot;. `Mesh.set_sharp_from_angle(angle=...)` exists. View transform &quot;AgX&quot;. Material/world `use_nodes = True` may warn — wrap in try. When unsure of an API name, check it in a quick headless run rather than guessing. Build geometry with bmesh / the data API rather than bpy.ops where you can; it is more reliable headless.
+- Preview often at low cost (e.g. 50% resolution, 32–64 samples), Read the PNG, critique it honestly, fix, repeat. Check: nothing cut off by the frame, nothing floating or intersecting, focus on the right object, no blown-out or crushed areas, materials read correctly.
+- Rendering must be serialized across the three agents so the machine is not overloaded. Before ANY render (preview or final) take the lock, and release it after:
+  `while ! mkdir blender-scenes/v2/.render.lock 2&gt;/dev/null; do /bin/sleep 3; done; &lt;blender render command&gt;; rmdir blender-scenes/v2/.render.lock`
+  Put the lock, render and unlock in ONE shell command so the lock is always released, and give that command a long timeout. If the lock looks stale (older than 15 minutes and no Blender render process running), you may remove it.
+- Disk is tight (about 8 GB free). Keep only the latest preview; delete old previews as you go. No EXR, no caches.
+
+## Deliverables (all in blender-scenes/v2/scene1/)
+- `scene1_still_life_v2.py` — one re-runnable script that builds the whole scene from an empty file.
+- `scene1_still_life_v2.blend` — saved scene, materials and camera in place.
+- `S1_StillLife_v2.png` — final render, 1920x1080, Cycles, denoised, enough samples to be clean.
+
+## Report back
+Reply with: the three file paths; object count and final render time; what you improved over v1 (short list); and any flaw still visible in the final render, stated plainly. Do not claim something is fixed unless you saw it in the final image.</pre></div></details></div></div>
+  <div class="cols">
+    <div class="col minus">
+      <h3>What v1 was lacking <small>7 gaps</small></h3>
+      <ul>
+        <li><b>Lamp was a cone on a stick.</b> No joints, no switch, no cord, no visible socket.</li>
+        <li><b>Books were coloured boxes.</b> No spine, no titles, no real page edges.</li>
+        <li><b>Mug was plain white.</b> No glaze, no foot, nothing in the air above it.</li>
+        <li><b>Leaves were flat strips.</b> No veins, no stems, no light passing through.</li>
+        <li><b>Oranges were smooth spheres.</b></li>
+        <li><b>Flat materials.</b> One colour and one roughness per object.</li>
+        <li><b>No story.</b> Nothing on the table says someone was just here.</li>
+      </ul>
+    </div>
+    <div class="col plus">
+      <h3>What v2 added <small>8 gains</small></h3>
+      <ul>
+        <li><b>Real lamp.</b> Stepped base, knurled collar, toggle switch, elbow joint with thumb wheel, bell shade with rolled lip, cloth cord over the table edge.</li>
+        <li><b>Bound books.</b> Boards, rounded spines, page lines, gold titles and author names, a ribbon bookmark.</li>
+        <li><b>Stoneware mug.</b> Speckled glaze dipped over raw clay, coffee, cork coaster, volumetric steam.</li>
+        <li><b>20 leaves</b> with midrib, side veins, glossy tops and translucency. Pot with rim and saucer.</li>
+        <li><b>Oranges</b> with pores, subsurface light, a twig and a leaf.</li>
+        <li><b>Solid wood table.</b> Glued planks, growth rings, lacquer, tapered legs.</li>
+        <li><b>Story props.</b> Tortoiseshell reading glasses, a hex pencil with eraser.</li>
+        <li><b>Lighting.</b> The bulb is a real light inside the shade, so the shade shapes the pool.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="col still">
+    <h3>Still wrong in v2</h3>
+    <ul>
+      <li>Inside of the lamp is blown out to flat white. The bulb is modelled but not readable.</li>
+      <li>Table legs are cut by the bottom of the frame.</li>
+      <li>Wood grain is bold and glossy. It reads like varnished pine.</li>
+      <li>Glasses lenses are almost invisible.</li>
+    </ul>
+  </div>
+  <p class="takeaway">v1 has the right objects. v2 has the <em>details that make them objects</em>.</p>
+</div></section>
+
+<!-- ============ SCENE 2 ============ -->
+<section class="scene gut" id="island"><div class="in">
+  <div class="scene-head">
+    <div class="num" aria-hidden="true">02</div>
+    <div class="ttl"><p class="eyebrow">Scene 2 · medium</p><h2>Low-poly floating island</h2></div>
+    <p class="desc">An island in the sky with a cabin, a windmill, a pond and a waterfall at sunset. Same subject and low-poly style both times.</p>
+  </div>
+  <div class="stage">
+    <div class="cmp" data-cmp>
+      <img src="img/s2_v2.jpg" alt="Version 2 of the floating island: sunset sky, banded rock, detailed cabin and windmill, flowers">
+      <img class="before" src="img/s2_v1.jpg" alt="Version 1 of the floating island: flat lavender sky, brown rock, simple cabin and windmill">
+      <span class="bar"></span><span class="knob">◂▸</span>
+      <span class="tag l">v1 · quick pass</span><span class="tag r">v2 · max effort</span>
+      <input type="range" id="cmp-s2" min="0" max="100" value="50" aria-label="Slide between version 1 and version 2 of the floating island">
+    </div>
+    <div class="ctrl"><span>Drag the image, or jump:</span><button type="button" data-to="100">Show v1</button><button type="button" data-to="50">Split</button><button type="button" data-to="0">Show v2</button></div>
+  </div>
+  <div class="stats">
+    <div class="stat"><span class="k">Objects</span><div class="row"><span class="a">343</span><span class="arrow">→</span><span class="b">110</span></div></div>
+    <div class="stat"><span class="k">Script lines</span><div class="row"><span class="a">386</span><span class="arrow">→</span><span class="b">2,743</span></div></div>
+    <div class="stat"><span class="k">Lights</span><div class="row"><span class="a">6</span><span class="arrow">→</span><span class="b">16</span></div></div>
+    <div class="stat"><span class="k">Render</span><div class="row"><span class="a">7 s</span><span class="arrow">→</span><span class="b">26 s</span></div></div>
+    <div class="stat"><span class="k">Est. cost</span><div class="row"><span class="a">~$2</span><span class="arrow">→</span><span class="b">$40.20</span></div></div>
+  </div>
+  <p class="aside">Fewer objects, more scene. v2 merges things like 190 flowers into single meshes, about 50,000 triangles in all.</p>
+  <div class="open"><h3>Open in Blender <small>paste in Terminal</small></h3><div class="orow"><span class="olab">v2 · max effort</span><code class="ocmd">open -a Blender ~/code-bear-channel/blender-scenes/v2/scene2/scene2_floating_island_v2.blend</code><button type="button" class="ocopy" data-cmd="open -a Blender ~/code-bear-channel/blender-scenes/v2/scene2/scene2_floating_island_v2.blend">Copy command</button></div><div class="orow"><span class="olab">v1 · quick pass</span><code class="ocmd">open -a Blender ~/code-bear-channel/blender-scenes/v1/S2_FloatingIsland_v1.blend</code><button type="button" class="ocopy" data-cmd="open -a Blender ~/code-bear-channel/blender-scenes/v1/S2_FloatingIsland_v1.blend">Copy command</button></div></div>
+  <div class="sp"><div class="spcol"><div class="who"><b class="s1">v1 prompt</b><span>typed by the user · one prompt for all three scenes</span></div><blockquote class="zoom" tabindex="0" role="button" aria-label="Enlarge this prompt">Create 3 3d scenes with scenes in blender using blender mcp , one simple but still not a basic , second bit more complex and 3rd very complex lets go</blockquote><p class="spnote">No scene was named. The model picked the subject for each level itself.</p></div><div class="spcol hot"><div class="who"><b>v2 prompt</b><span>typed by the user</span></div><blockquote class="zoom" tabindex="0" role="button" aria-label="Enlarge this prompt">run same 3 on max effort 3 seperate agents</blockquote><p class="spnote">The main session turned that into one brief per agent. This is the exact brief for this scene:</p><details><summary>Agent brief for this scene <span>840 words</span></summary><div class="pre"><button class="big" type="button" data-big="sb2">Enlarge</button><button class="copy" type="button" data-copy="sb2">Copy</button><pre id="sb2">Build a high-quality 3D scene in Blender and render it. You own this one scene end to end. Take the time to make it look genuinely good — iterate on previews until it does.
+
+## The scene: &quot;medium complexity&quot; — low-poly floating island at sunset
+A stylized low-poly island floating in the sky: grassy top, rocky underside tapering to a point, a wooden cabin with glowing windows and chimney smoke, a windmill on a hill, a pond with a stream that runs off the edge as a waterfall, pine and autumn trees, rocks, a fence, stepping stones, a lantern, small floating islets, clouds, a hot-air balloon, warm low sun and a sunset sky.
+
+A first version already exists. Your job is to make a clearly better v2 of the same idea — same subject and low-poly style, much higher craft. Look at the first version before you start:
+- Render: blender-scenes/renders/S2_FloatingIsland_0001.png (Read it — it is an image)
+- Script: blender-scenes/scene2_floating_island.py
+- Shared helpers: blender-scenes/common.py (mesh builders, materials, lights, camera, Cycles setup)
+
+Where v1 is weak, and where to push: the sky is a flat lavender gradient with no visible sun, no depth and no atmosphere (add a real sunset: sun disc or glow, layered clouds catching warm rim light, distant haze, maybe far islands for depth); the island underside is one brown mass (add rock strata, color bands, hanging roots/vines, embedded crystals or boulders, clearer silhouette); the grass top is plain (add flowers, grass tufts, bushes, a dirt path, a small garden or woodpile, a dock on the pond, lily pads); the waterfall is a flat ribbon (give it volume, foam at the lip, mist, falling droplets); the cabin and windmill are blocky (porch, shutters, roof shingles or planks, door detail, windmill lattice blades and a balcony); clouds are grey-white blobs (shape them, light them warm on the sun side); the stream start shows a bright block at the pond edge; lighting is flat (stronger warm key vs cool shadow fill, long shadows, glowing windows that actually spill light). Keep the readable low-poly look — richer and more deliberate, not noisy.
+
+## How to work (important — two other agents are building other scenes at the same time)
+- Do NOT use the Blender MCP tools (mcp__blender__*). There is one shared GUI Blender and three agents would clobber each other. Run Blender headless from the shell instead:
+  `/Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup -P your_script.py` (Blender 5.2.1 LTS, macOS, Metal GPU).
+  With --factory-startup the GPU is not enabled by default; enable it in your script: set `bpy.context.preferences.addons[&#x27;cycles&#x27;].preferences.compute_device_type = &#x27;METAL&#x27;`, call `.get_devices()`, set every device `.use = True`, then `scene.cycles.device = &#x27;GPU&#x27;`. Verify in the render log that it is really using the GPU.
+- Work only inside blender-scenes/v2/scene2/ (create it). Do not modify or delete anything outside that folder — the v1 files and the other agents&#x27; folders are off limits. You may copy common.py into your folder and change your copy freely.
+- Blender 5.2 API notes that held true in v1: Principled BSDF inputs are named &quot;Base Color&quot;, &quot;Roughness&quot;, &quot;Metallic&quot;, &quot;IOR&quot;, &quot;Transmission Weight&quot;, &quot;Coat Weight&quot;, &quot;Subsurface Weight&quot;, &quot;Emission Color&quot;, &quot;Emission Strength&quot;, &quot;Alpha&quot;. `Mesh.set_sharp_from_angle(angle=...)` exists. View transform &quot;AgX&quot;. Material/world `use_nodes = True` may warn — wrap in try. The Sky Texture node&#x27;s type enum changed in 5.x — inspect the enum items at runtime before setting it. When unsure of an API name, check it in a quick headless run rather than guessing. Build geometry with bmesh / the data API rather than bpy.ops where you can; it is more reliable headless.
+- Preview often at low cost (e.g. 50% resolution, 32–64 samples), Read the PNG, critique it honestly, fix, repeat. Check: nothing cut off by the frame, nothing floating that should be grounded, trees not hiding the cabin or windmill, no objects overlapping awkwardly from the camera&#x27;s view, no blown-out or crushed areas.
+- Rendering must be serialized across the three agents so the machine is not overloaded. Before ANY render (preview or final) take the lock, and release it after:
+  `while ! mkdir blender-scenes/v2/.render.lock 2&gt;/dev/null; do /bin/sleep 3; done; &lt;blender render command&gt;; rmdir blender-scenes/v2/.render.lock`
+  Put the lock, render and unlock in ONE shell command so the lock is always released, and give that command a long timeout. If the lock looks stale (older than 15 minutes and no Blender render process running), you may remove it.
+- Disk is tight (about 8 GB free). Keep only the latest preview; delete old previews as you go. No EXR, no caches.
+
+## Deliverables (all in blender-scenes/v2/scene2/)
+- `scene2_floating_island_v2.py` — one re-runnable script that builds the whole scene from an empty file.
+- `scene2_floating_island_v2.blend` — saved scene, materials and camera in place.
+- `S2_FloatingIsland_v2.png` — final render, 1920x1080, Cycles, denoised, enough samples to be clean.
+
+## Report back
+Reply with: the three file paths; object count and final render time; what you improved over v1 (short list); and any flaw still visible in the final render, stated plainly. Do not claim something is fixed unless you saw it in the final image.</pre></div></details></div></div>
+  <div class="cols">
+    <div class="col minus">
+      <h3>What v1 was lacking <small>7 gaps</small></h3>
+      <ul>
+        <li><b>Flat lavender sky.</b> No sun, no depth, no atmosphere.</li>
+        <li><b>Underside was one brown mass.</b> No layers, nothing hanging.</li>
+        <li><b>Bare grass.</b> Trees and a few rocks, nothing else growing.</li>
+        <li><b>Waterfall was a flat ribbon</b> with a bright block where it left the pond.</li>
+        <li><b>Blocky cabin and windmill.</b> Boxes with a roof.</li>
+        <li><b>Grey-white blob clouds.</b></li>
+        <li><b>Flat light.</b> Glowing windows that lit nothing.</li>
+      </ul>
+    </div>
+    <div class="col plus">
+      <h3>What v2 added <small>8 gains</small></h3>
+      <ul>
+        <li><b>A real sunset.</b> Indigo to pink to orange, a sun disc with glow, thin cloud layers, four hazy far islands, a second balloon, a flock of birds.</li>
+        <li><b>Banded rock.</b> Stepped strata, 9 hanging spires, a dripping turf edge, vines, roots, glowing cyan crystals.</li>
+        <li><b>A lived-in top.</b> About 190 flowers, dirt path with stone steps, fence, bench, vegetable garden with pumpkins, woodpile, well, dock, lily pads.</li>
+        <li><b>Waterfall with volume.</b> Curved sheet, foam at the lip, droplets, mist cloud.</li>
+        <li><b>Cabin.</b> Log walls, shingle roof, covered porch, teal door and shutters, flower boxes.</li>
+        <li><b>Windmill.</b> Stone base, balcony, lattice sails with back-lit canvas.</li>
+        <li><b>Clouds</b> lit violet on the shade side and peach on the sun side.</li>
+        <li><b>An extra nobody asked for:</b> a rope bridge to the next islet.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="col still">
+    <h3>Still wrong in v2</h3>
+    <ul>
+      <li>The sun disc is pale, not a deep orange ball.</li>
+      <li>Chimney smoke reads as a chain of separate puffs.</li>
+      <li>Some clouds are cut by the frame edge.</li>
+      <li>Light direction is cheated. The key light does not come from where the sun sits.</li>
+      <li>The agent switched the colour transform from AgX to Khronos PBR Neutral, because AgX washed the sunset out.</li>
+    </ul>
+  </div>
+  <p class="takeaway">v1 is an island. v2 is <em>a place someone lives</em>.</p>
+</div></section>
+
+<!-- ============ SCENE 3 ============ -->
+<section class="scene gut" id="city"><div class="in">
+  <div class="scene-head">
+    <div class="num" aria-hidden="true">03</div>
+    <div class="ttl"><p class="eyebrow">Scene 3 · very complex</p><h2>Rainy neon city street</h2></div>
+    <p class="desc">A street-level view down a city canyon at night in the rain. Signs, shops, cars, a train, people with umbrellas and a tower at the end.</p>
+  </div>
+  <div class="stage">
+    <div class="cmp" data-cmp>
+      <img src="img/s3_v2.jpg" alt="Version 2 of the neon city: dark night street, coloured neon tubes, big reflecting puddle, glowing tower">
+      <img class="before" src="img/s3_v1.jpg" alt="Version 1 of the neon city: evenly bright street, box buildings, glowing tile shopfronts">
+      <span class="bar"></span><span class="knob">◂▸</span>
+      <span class="tag l">v1 · quick pass</span><span class="tag r">v2 · max effort</span>
+      <input type="range" id="cmp-s3" min="0" max="100" value="50" aria-label="Slide between version 1 and version 2 of the neon city">
+    </div>
+    <div class="ctrl"><span>Drag the image, or jump:</span><button type="button" data-to="100">Show v1</button><button type="button" data-to="50">Split</button><button type="button" data-to="0">Show v2</button></div>
+  </div>
+  <div class="stats">
+    <div class="stat"><span class="k">Objects</span><div class="row"><span class="a">2,175</span><span class="arrow">→</span><span class="b">505</span></div></div>
+    <div class="stat"><span class="k">Script lines</span><div class="row"><span class="a">568</span><span class="arrow">→</span><span class="b">3,956</span></div></div>
+    <div class="stat"><span class="k">Lights</span><div class="row"><span class="a">25</span><span class="arrow">→</span><span class="b">200</span></div></div>
+    <div class="stat"><span class="k">Render</span><div class="row"><span class="a">86 s</span><span class="arrow">→</span><span class="b">219 s</span></div></div>
+    <div class="stat"><span class="k">Est. cost</span><div class="row"><span class="a">~$2</span><span class="arrow">→</span><span class="b">$43.38</span></div></div>
+  </div>
+  <p class="aside">v1 made thousands of tiny boxes. v2 makes fewer, heavier objects: about 400,000 faces in 505 objects.</p>
+  <div class="open"><h3>Open in Blender <small>paste in Terminal</small></h3><div class="orow"><span class="olab">v2 · max effort</span><code class="ocmd">open -a Blender ~/code-bear-channel/blender-scenes/v2/scene3/scene3_neon_city_v2.blend</code><button type="button" class="ocopy" data-cmd="open -a Blender ~/code-bear-channel/blender-scenes/v2/scene3/scene3_neon_city_v2.blend">Copy command</button></div><div class="orow"><span class="olab">v1 · quick pass</span><code class="ocmd">open -a Blender ~/code-bear-channel/blender-scenes/v1/S3_NeonCity_v1.blend</code><button type="button" class="ocopy" data-cmd="open -a Blender ~/code-bear-channel/blender-scenes/v1/S3_NeonCity_v1.blend">Copy command</button></div></div>
+  <div class="sp"><div class="spcol"><div class="who"><b class="s1">v1 prompt</b><span>typed by the user · one prompt for all three scenes</span></div><blockquote class="zoom" tabindex="0" role="button" aria-label="Enlarge this prompt">Create 3 3d scenes with scenes in blender using blender mcp , one simple but still not a basic , second bit more complex and 3rd very complex lets go</blockquote><p class="spnote">No scene was named. The model picked the subject for each level itself.</p></div><div class="spcol hot"><div class="who"><b>v2 prompt</b><span>typed by the user</span></div><blockquote class="zoom" tabindex="0" role="button" aria-label="Enlarge this prompt">run same 3 on max effort 3 seperate agents</blockquote><p class="spnote">The main session turned that into one brief per agent. This is the exact brief for this scene:</p><details><summary>Agent brief for this scene <span>1,001 words</span></summary><div class="pre"><button class="big" type="button" data-big="sb3">Enlarge</button><button class="copy" type="button" data-copy="sb3">Copy</button><pre id="sb3">Build a high-quality 3D scene in Blender and render it. You own this one scene end to end. Take the time to make it look genuinely good — iterate on previews until it does.
+
+## The scene: &quot;very complex&quot; — rainy neon city street at night
+A street-level view down a dense city canyon at night in the rain: rows of tall buildings with procedurally lit windows, neon blade signs and shop signs with generic words (RAMEN, HOTEL, BAR, ARCADE, CAFE … no real brand names), lit shopfronts with awnings, street lamps, a traffic light, overhead cables with string lights, cars with head and tail lights, flying vehicles with light trails, an elevated rail line with a lit train crossing the street, pedestrians with umbrellas, vending machines, rooftop water tanks, billboards and antennas, a hero tower with holographic rings at the end of the street, a wet reflective road with puddles, rain streaks and volumetric fog.
+
+A first version already exists. Your job is to make a clearly better v2 of the same idea — same subject, much higher craft and realism. Look at the first version before you start:
+- Render: blender-scenes/renders/S3_NeonCity_0001.png (Read it — it is an image)
+- Script: blender-scenes/scene3_neon_city.py
+- Shared helpers: blender-scenes/common.py (mesh builders, materials, lights, camera, Cycles setup)
+
+Where v1 is weak, and where to push: it does not feel like night (too evenly bright; you want deep blacks with pools of colored light and glow in the fog); buildings are plain boxes with a window-grid shader (add real facade depth near the camera: recessed windows with frames and sills, balconies, pipes, ledges, signage brackets, varied ground floors; window interiors with variation such as blinds, some dim, some colored); shopfronts are a flat grid of glowing tiles that reads as fake (build believable shop windows: glass with reflections, interior shelves/counters/stools seen through it, doors, menu boards); pedestrians are peg figures (give them proportioned bodies, arms, coats, bags, walking poses); cars are boxes (shape them: wheel arches, windscreens, bumpers, mirrors, wet reflective paint, light beams in the rain); the road needs real puddles with crisp reflections, lane wear, manhole steam, drain grates; rain is sparse streaks (add depth-layered rain, splashes on the road, drips from awnings); neon blows out to white (keep the color in the tubes, add glow/bloom via fog or compositor glare, tube-style letters, flicker variety); the far city and hero tower are lost behind the rail deck and haze (compose so there is a clear foreground, midground and a readable hero tower in the distance); the top of frame cuts through signs awkwardly. Aim for a cinematic frame with one clear focal point.
+
+## How to work (important — two other agents are building other scenes at the same time)
+- Do NOT use the Blender MCP tools (mcp__blender__*). There is one shared GUI Blender and three agents would clobber each other. Run Blender headless from the shell instead:
+  `/Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup -P your_script.py` (Blender 5.2.1 LTS, macOS, Metal GPU).
+  With --factory-startup the GPU is not enabled by default; enable it in your script: set `bpy.context.preferences.addons[&#x27;cycles&#x27;].preferences.compute_device_type = &#x27;METAL&#x27;`, call `.get_devices()`, set every device `.use = True`, then `scene.cycles.device = &#x27;GPU&#x27;`. Verify in the render log that it is really using the GPU.
+- Work only inside blender-scenes/v2/scene3/ (create it). Do not modify or delete anything outside that folder — the v1 files and the other agents&#x27; folders are off limits. You may copy common.py into your folder and change your copy freely.
+- Blender 5.2 API notes that held true in v1: Principled BSDF inputs are named &quot;Base Color&quot;, &quot;Roughness&quot;, &quot;Metallic&quot;, &quot;IOR&quot;, &quot;Transmission Weight&quot;, &quot;Coat Weight&quot;, &quot;Subsurface Weight&quot;, &quot;Emission Color&quot;, &quot;Emission Strength&quot;, &quot;Alpha&quot;. `Mesh.set_sharp_from_angle(angle=...)` exists. View transform &quot;AgX&quot; (it desaturates very bright emitters — keep neon strengths moderate). Material/world `use_nodes = True` may warn — wrap in try. Text objects use the built-in font; glossy walls right behind text mirror the letters and make them look doubled, so put a matte board behind wall-mounted text. The compositor API changed in 5.x — inspect it at runtime before relying on it. When unsure of an API name, check it in a quick headless run rather than guessing. Build geometry with bmesh / the data API rather than bpy.ops where you can; it is more reliable headless. Use instancing (shared mesh data or collection instances) for repeated things so the scene stays light.
+- Preview often at low cost (e.g. 50% resolution, 32–64 samples), Read the PNG, critique it honestly, fix, repeat. Check: reads as night, nothing important cut off by the frame, nothing floating or intersecting, text legible and not doubled, no large flat glowing rectangles, no fireflies in the final.
+- Rendering must be serialized across the three agents so the machine is not overloaded. Before ANY render (preview or final) take the lock, and release it after:
+  `while ! mkdir blender-scenes/v2/.render.lock 2&gt;/dev/null; do /bin/sleep 3; done; &lt;blender render command&gt;; rmdir blender-scenes/v2/.render.lock`
+  Put the lock, render and unlock in ONE shell command so the lock is always released, and give that command a long timeout. If the lock looks stale (older than 15 minutes and no Blender render process running), you may remove it. Keep an eye on memory: this is the heaviest scene; if a render gets very slow or swaps, cut geometry or samples rather than pushing on.
+- Disk is tight (about 8 GB free). Keep only the latest preview; delete old previews as you go. No EXR, no caches.
+
+## Deliverables (all in blender-scenes/v2/scene3/)
+- `scene3_neon_city_v2.py` — one re-runnable script that builds the whole scene from an empty file.
+- `scene3_neon_city_v2.blend` — saved scene, materials and camera in place.
+- `S3_NeonCity_v2.png` — final render, 1920x1080, Cycles, denoised, enough samples to be clean.
+
+## Report back
+Reply with: the three file paths; object count and final render time; what you improved over v1 (short list); and any flaw still visible in the final render, stated plainly. Do not claim something is fixed unless you saw it in the final image.</pre></div></details></div></div>
+  <div class="cols">
+    <div class="col minus">
+      <h3>What v1 was lacking <small>7 gaps</small></h3>
+      <ul>
+        <li><b>It was not night.</b> Evenly bright from edge to edge.</li>
+        <li><b>Buildings were boxes</b> with a window-grid pattern painted on.</li>
+        <li><b>Shopfronts were glowing tile grids.</b> They read as fake.</li>
+        <li><b>Peg-figure people</b> and <b>box cars.</b></li>
+        <li><b>Neon blew out to white.</b> The colour was lost.</li>
+        <li><b>Sparse rain</b> and a road with no real puddles.</li>
+        <li><b>The tower was hidden</b> behind the rail deck and haze. Signs were cut by the top of the frame.</li>
+      </ul>
+    </div>
+    <div class="col plus">
+      <h3>What v2 added <small>8 gains</small></h3>
+      <ul>
+        <li><b>Real night.</b> A quarter of the frame is near black. Colour only where there is light.</li>
+        <li><b>Bent-tube neon</b> from a stroke font, colour kept in the tubes, bloom and coloured fog glow, a few dim letters for flicker.</li>
+        <li><b>A mirror puddle</b> in the foreground that reflects the tower, signs and string lights, with rain rings.</li>
+        <li><b>Seven built facades.</b> Recessed windows, sills, blinds, balconies, pipes, a fire escape.</li>
+        <li><b>Shop interiors behind glass.</b> Ramen bar with stools and customers, a mart with shelves, arcade, cafe, laundry, hotel lobby.</li>
+        <li><b>Shaped cars and proportioned people</b> with coats, bags and ribbed umbrellas.</li>
+        <li><b>Three depth layers of rain</b> that light up near lamps, plus splash crowns.</li>
+        <li><b>A clear focal point.</b> The tower with its rings sits above the lit train.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="col still">
+    <h3>Still wrong in v2</h3>
+    <ul>
+      <li>The lower-left road is dark and empty.</li>
+      <li>The train is small and dim. You cannot make out the passengers.</li>
+      <li>A utility pole stands in front of the ramen shop.</li>
+      <li>The lightbox signs (24H MART, SUSHI) are flat lit panels.</li>
+      <li>Flying vehicles are tiny dots near the tower.</li>
+    </ul>
+  </div>
+  <p class="takeaway">The biggest jump of the three. v1 lists what a neon city has. v2 <em>composes a shot</em>.</p>
+</div></section>
+
+<!-- ============ COST ============ -->
+<div class="band"><section class="scene gut" id="cost"><div class="in">
+  <div class="scene-head">
+    <div class="num" aria-hidden="true">$</div>
+    <div class="ttl"><p class="eyebrow">What the difference cost</p><h2>Tokens and estimated cost</h2></div>
+    <p class="desc">Token counts come from the session logs, one entry per model response. Dollar figures are an estimate at API list price for Claude Fable 5.2, the model used for every run.</p>
+  </div>
+
+  <div class="duel">
+    <div class="price"><p class="eyebrow">v1 · all three scenes</p><div class="amt"><sup>$</sup>6.22</div><p>One session. Build, tune and fix. About $2 a scene.</p></div>
+    <div class="times"><span><b>18×</b>the cost</span></div>
+    <div class="price big"><p class="eyebrow" style="color:var(--v2-soft)">v2 · three max-effort agents</p><div class="amt"><sup>$</sup>113.96</div><p>$30 to $43 a scene. Add $4.88 for the main session that briefed and checked them: <b style="color:var(--fg)">$118.84</b> in all.</p></div>
+  </div>
+
+  <div class="bars" role="img" aria-label="Estimated cost per run, split by token type. v1 all three scenes 6 dollars 22. v2 still life 30 dollars 38. v2 island 40 dollars 20. v2 city 43 dollars 38.">
+    <div class="legend"><span><i style="background:var(--v2)"></i>Output written</span><span><i style="background:var(--write)"></i>New input (cache write)</span><span><i style="background:var(--read)"></i>Cached input re-read</span></div>
+    <div class="barrow"><span class="lab">v1 · all three scenes<small>29 responses</small></span><div class="track"><i style="width:6.6%;background:var(--v2)"></i><i style="width:5.8%;background:var(--write)"></i><i style="width:2%;background:var(--read)"></i></div><span class="val">$6.22</span></div>
+    <div class="barrow"><span class="lab">v2 · still life<small>76 responses</small></span><div class="track"><i style="width:28%;background:var(--v2)"></i><i style="width:28.9%;background:var(--write)"></i><i style="width:13.1%;background:var(--read)"></i></div><span class="val">$30.38</span></div>
+    <div class="barrow"><span class="lab">v2 · floating island<small>96 responses</small></span><div class="track"><i style="width:37%;background:var(--v2)"></i><i style="width:35.1%;background:var(--write)"></i><i style="width:20.5%;background:var(--read)"></i></div><span class="val">$40.20</span></div>
+    <div class="barrow"><span class="lab">v2 · neon city<small>112 responses</small></span><div class="track"><i style="width:43.2%;background:var(--v2)"></i><i style="width:30.8%;background:var(--write)"></i><i style="width:26%;background:var(--read)"></i></div><span class="val">$43.38</span></div>
+  </div>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Run</th><th>Responses</th><th>Tool calls</th><th>Output</th><th>New input</th><th>Cached re-read</th><th>Working time</th><th>Est. cost</th></tr></thead>
+      <tbody>
+        <tr><td>v1 · all three scenes<small>one session: build, tune, fix three flaws</small></td><td>29</td><td>53</td><td>71,461</td><td>156,790</td><td>4,273,744</td><td>~21 min</td><td class="cost">$6.22</td></tr>
+        <tr><td>v2 · still life<small>own agent, max effort</small></td><td>76</td><td>107</td><td>303,734</td><td>1,254,110</td><td>28,469,106</td><td>~53 min</td><td class="cost">$30.38</td></tr>
+        <tr><td>v2 · floating island<small>own agent, max effort</small></td><td>96</td><td>110</td><td>401,160</td><td>1,524,384</td><td>44,557,879</td><td>~66 min</td><td class="cost">$40.20</td></tr>
+        <tr><td>v2 · neon city<small>own agent, max effort</small></td><td>112</td><td>127</td><td>468,470</td><td>1,337,444</td><td>56,347,897</td><td>~100 min</td><td class="cost">$43.38</td></tr>
+        <tr class="sum"><td>v2 · three agents together</td><td>284</td><td>344</td><td>1,173,364</td><td>4,115,938</td><td>129,374,882</td><td>~219 min</td><td class="cost">$113.96</td></tr>
+        <tr><td>Briefing and checking the agents<small>main session, not scene work</small></td><td>16</td><td>21</td><td>19,647</td><td>212,550</td><td>3,460,145</td><td>—</td><td class="cost">$4.88</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="rates">
+    <div class="rate"><b>$40</b><span>per million output tokens</span></div>
+    <div class="rate"><b>$8</b><span>per million input tokens</span></div>
+    <div class="rate"><b>$0.20</b><span>per million cached tokens re-read</span></div>
+    <div class="rate"><b>$10 / $16</b><span>per million cache-write tokens, 5-minute / 1-hour. Assumed.</span></div>
+  </div>
+
+  <div class="cols">
+    <div class="col">
+      <h3>How the estimate is made</h3>
+      <ul style="list-style:disc;padding-left:18px;gap:8px">
+        <li style="padding-left:0">Output, input and cache-read prices are the published Claude Fable 5.2 rates.</li>
+        <li style="padding-left:0"><b>Cache-write prices are an assumption:</b> 1.25× input for 5-minute cache, 2× for 1-hour cache. The agents used 5-minute cache, the main session 1-hour.</li>
+        <li style="padding-left:0">These runs were on a subscription plan, so nothing was billed per token. This is what the same work would cost through the API.</li>
+        <li style="padding-left:0">Working time sums gaps under 10 minutes between log entries. It leaves out a pause of about 3 hours when all three agents hit the usage limit.</li>
+      </ul>
+    </div>
+    <div class="col">
+      <h3>What the numbers say</h3>
+      <ul style="list-style:disc;padding-left:18px;gap:8px">
+        <li style="padding-left:0">v2 wrote <b>16.4× more output</b> and cost about <b>18× more</b> than v1 for the same three scenes.</li>
+        <li style="padding-left:0">Only about 40% of the v2 cost is the model writing. The rest is reading: each of 76 to 112 steps re-reads the whole conversation.</li>
+        <li style="padding-left:0">Agents made <b>107 to 127 tool calls each</b>, mostly render, look, fix loops. v1 looked at each scene two or three times.</li>
+        <li style="padding-left:0">The city cost the most and improved the most.</li>
+      </ul>
+    </div>
+  </div>
+</div></section></div>
+
+<!-- ============ PROMPTS ============ -->
+<section class="scene gut" id="prompts"><div class="in">
+  <div class="scene-head">
+    <div class="num" aria-hidden="true">›_</div>
+    <div class="ttl"><p class="eyebrow">Everything that was typed</p><h2>All prompts</h2></div>
+    <p class="desc">Four user prompts drove the whole thing. The three long briefs were written by the main session for its agents, not by the user.</p>
+  </div>
+  <div class="prompts">
+    <div class="pgrid">
+      <div class="prompt"><div class="who"><b>User · 1</b><span>starts v1</span></div><blockquote class="zoom" tabindex="0" role="button" aria-label="Enlarge this prompt">Create 3 3d scenes with scenes in blender using blender mcp , one simple but still not a basic , second bit more complex and 3rd very complex lets go</blockquote></div>
+      <div class="prompt"><div class="who"><b>User · 2</b><span>after v1 listed three small flaws</span></div><blockquote class="zoom" tabindex="0" role="button" aria-label="Enlarge this prompt">Yes, fix them</blockquote></div>
+      <div class="prompt"><div class="who"><b>User · 3</b><span>starts v2</span></div><blockquote class="zoom" tabindex="0" role="button" aria-label="Enlarge this prompt">run same 3 on max effort 3 seperate agents</blockquote></div>
+      <div class="prompt"><div class="who"><b>User · 4</b><span>after all three agents hit the usage limit</span></div><blockquote class="zoom" tabindex="0" role="button" aria-label="Enlarge this prompt">Try again</blockquote></div>
+    </div>
+    <details>
+      <summary>Agent brief · Scene 1 still life <span>733 words · written by the main session</span></summary>
+      <div class="pre"><button class="big" type="button" data-big="b1">Enlarge</button><button class="copy" type="button" data-copy="b1">Copy</button><pre id="b1">Build a high-quality 3D scene in Blender and render it. You own this one scene end to end. Take the time to make it look genuinely good — iterate on previews until it does.
+
+## The scene: &quot;simple, but not basic&quot; — lamp-lit still life
+A round wooden side table with a brass desk lamp, a stack of three books, a ceramic mug, a potted plant and two oranges, against a dark teal seamless backdrop. Moody warm lamp light plus a cool key and a warm rim. Shallow depth of field.
+
+A first version already exists. Your job is to make a clearly better v2 of the same idea — same subject, much higher craft. Look at the first version before you start:
+- Render: blender-scenes/renders/S1_StillLife_0001.png (Read it — it is an image)
+- Script: blender-scenes/scene1_still_life.py
+- Shared helpers: blender-scenes/common.py (mesh builders, materials, lights, camera, Cycles setup)
+
+Where v1 is weak, and where to push: geometry is primitive (lamp is a cone on a stick with no joint detail, switch, cord or bulb socket; books have no spine detail, titles or page edges; mug is plain; plant leaves are simple strips with no veins or stems; oranges are plain spheres); materials are flat (add roughness variation, fingerprints/wear, fabric or paper texture, glaze, subsurface on leaves and fruit, real wood grain with end grain on the table edge); composition and lighting can be more deliberate (light falloff on the backdrop, a visible pool of lamp light, steam from the mug, small story props such as reading glasses, a pencil, a bookmark, a coaster). Keep it a restrained still life — richer detail, not clutter.
+
+## How to work (important — two other agents are building other scenes at the same time)
+- Do NOT use the Blender MCP tools (mcp__blender__*). There is one shared GUI Blender and three agents would clobber each other. Run Blender headless from the shell instead:
+  `/Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup -P your_script.py` (Blender 5.2.1 LTS, macOS, Metal GPU).
+  With --factory-startup the GPU is not enabled by default; enable it in your script: set `bpy.context.preferences.addons[&#x27;cycles&#x27;].preferences.compute_device_type = &#x27;METAL&#x27;`, call `.get_devices()`, set every device `.use = True`, then `scene.cycles.device = &#x27;GPU&#x27;`. Verify in the render log that it is really using the GPU.
+- Work only inside blender-scenes/v2/scene1/ (create it). Do not modify or delete anything outside that folder — the v1 files and the other agents&#x27; folders are off limits. You may copy common.py into your folder and change your copy freely.
+- Blender 5.2 API notes that held true in v1: Principled BSDF inputs are named &quot;Base Color&quot;, &quot;Roughness&quot;, &quot;Metallic&quot;, &quot;IOR&quot;, &quot;Transmission Weight&quot;, &quot;Coat Weight&quot;, &quot;Subsurface Weight&quot;, &quot;Emission Color&quot;, &quot;Emission Strength&quot;, &quot;Alpha&quot;. `Mesh.set_sharp_from_angle(angle=...)` exists. View transform &quot;AgX&quot;. Material/world `use_nodes = True` may warn — wrap in try. When unsure of an API name, check it in a quick headless run rather than guessing. Build geometry with bmesh / the data API rather than bpy.ops where you can; it is more reliable headless.
+- Preview often at low cost (e.g. 50% resolution, 32–64 samples), Read the PNG, critique it honestly, fix, repeat. Check: nothing cut off by the frame, nothing floating or intersecting, focus on the right object, no blown-out or crushed areas, materials read correctly.
+- Rendering must be serialized across the three agents so the machine is not overloaded. Before ANY render (preview or final) take the lock, and release it after:
+  `while ! mkdir blender-scenes/v2/.render.lock 2&gt;/dev/null; do /bin/sleep 3; done; &lt;blender render command&gt;; rmdir blender-scenes/v2/.render.lock`
+  Put the lock, render and unlock in ONE shell command so the lock is always released, and give that command a long timeout. If the lock looks stale (older than 15 minutes and no Blender render process running), you may remove it.
+- Disk is tight (about 8 GB free). Keep only the latest preview; delete old previews as you go. No EXR, no caches.
+
+## Deliverables (all in blender-scenes/v2/scene1/)
+- `scene1_still_life_v2.py` — one re-runnable script that builds the whole scene from an empty file.
+- `scene1_still_life_v2.blend` — saved scene, materials and camera in place.
+- `S1_StillLife_v2.png` — final render, 1920x1080, Cycles, denoised, enough samples to be clean.
+
+## Report back
+Reply with: the three file paths; object count and final render time; what you improved over v1 (short list); and any flaw still visible in the final render, stated plainly. Do not claim something is fixed unless you saw it in the final image.</pre></div>
+    </details>
+    <details>
+      <summary>Agent brief · Scene 2 floating island <span>840 words · written by the main session</span></summary>
+      <div class="pre"><button class="big" type="button" data-big="b2">Enlarge</button><button class="copy" type="button" data-copy="b2">Copy</button><pre id="b2">Build a high-quality 3D scene in Blender and render it. You own this one scene end to end. Take the time to make it look genuinely good — iterate on previews until it does.
+
+## The scene: &quot;medium complexity&quot; — low-poly floating island at sunset
+A stylized low-poly island floating in the sky: grassy top, rocky underside tapering to a point, a wooden cabin with glowing windows and chimney smoke, a windmill on a hill, a pond with a stream that runs off the edge as a waterfall, pine and autumn trees, rocks, a fence, stepping stones, a lantern, small floating islets, clouds, a hot-air balloon, warm low sun and a sunset sky.
+
+A first version already exists. Your job is to make a clearly better v2 of the same idea — same subject and low-poly style, much higher craft. Look at the first version before you start:
+- Render: blender-scenes/renders/S2_FloatingIsland_0001.png (Read it — it is an image)
+- Script: blender-scenes/scene2_floating_island.py
+- Shared helpers: blender-scenes/common.py (mesh builders, materials, lights, camera, Cycles setup)
+
+Where v1 is weak, and where to push: the sky is a flat lavender gradient with no visible sun, no depth and no atmosphere (add a real sunset: sun disc or glow, layered clouds catching warm rim light, distant haze, maybe far islands for depth); the island underside is one brown mass (add rock strata, color bands, hanging roots/vines, embedded crystals or boulders, clearer silhouette); the grass top is plain (add flowers, grass tufts, bushes, a dirt path, a small garden or woodpile, a dock on the pond, lily pads); the waterfall is a flat ribbon (give it volume, foam at the lip, mist, falling droplets); the cabin and windmill are blocky (porch, shutters, roof shingles or planks, door detail, windmill lattice blades and a balcony); clouds are grey-white blobs (shape them, light them warm on the sun side); the stream start shows a bright block at the pond edge; lighting is flat (stronger warm key vs cool shadow fill, long shadows, glowing windows that actually spill light). Keep the readable low-poly look — richer and more deliberate, not noisy.
+
+## How to work (important — two other agents are building other scenes at the same time)
+- Do NOT use the Blender MCP tools (mcp__blender__*). There is one shared GUI Blender and three agents would clobber each other. Run Blender headless from the shell instead:
+  `/Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup -P your_script.py` (Blender 5.2.1 LTS, macOS, Metal GPU).
+  With --factory-startup the GPU is not enabled by default; enable it in your script: set `bpy.context.preferences.addons[&#x27;cycles&#x27;].preferences.compute_device_type = &#x27;METAL&#x27;`, call `.get_devices()`, set every device `.use = True`, then `scene.cycles.device = &#x27;GPU&#x27;`. Verify in the render log that it is really using the GPU.
+- Work only inside blender-scenes/v2/scene2/ (create it). Do not modify or delete anything outside that folder — the v1 files and the other agents&#x27; folders are off limits. You may copy common.py into your folder and change your copy freely.
+- Blender 5.2 API notes that held true in v1: Principled BSDF inputs are named &quot;Base Color&quot;, &quot;Roughness&quot;, &quot;Metallic&quot;, &quot;IOR&quot;, &quot;Transmission Weight&quot;, &quot;Coat Weight&quot;, &quot;Subsurface Weight&quot;, &quot;Emission Color&quot;, &quot;Emission Strength&quot;, &quot;Alpha&quot;. `Mesh.set_sharp_from_angle(angle=...)` exists. View transform &quot;AgX&quot;. Material/world `use_nodes = True` may warn — wrap in try. The Sky Texture node&#x27;s type enum changed in 5.x — inspect the enum items at runtime before setting it. When unsure of an API name, check it in a quick headless run rather than guessing. Build geometry with bmesh / the data API rather than bpy.ops where you can; it is more reliable headless.
+- Preview often at low cost (e.g. 50% resolution, 32–64 samples), Read the PNG, critique it honestly, fix, repeat. Check: nothing cut off by the frame, nothing floating that should be grounded, trees not hiding the cabin or windmill, no objects overlapping awkwardly from the camera&#x27;s view, no blown-out or crushed areas.
+- Rendering must be serialized across the three agents so the machine is not overloaded. Before ANY render (preview or final) take the lock, and release it after:
+  `while ! mkdir blender-scenes/v2/.render.lock 2&gt;/dev/null; do /bin/sleep 3; done; &lt;blender render command&gt;; rmdir blender-scenes/v2/.render.lock`
+  Put the lock, render and unlock in ONE shell command so the lock is always released, and give that command a long timeout. If the lock looks stale (older than 15 minutes and no Blender render process running), you may remove it.
+- Disk is tight (about 8 GB free). Keep only the latest preview; delete old previews as you go. No EXR, no caches.
+
+## Deliverables (all in blender-scenes/v2/scene2/)
+- `scene2_floating_island_v2.py` — one re-runnable script that builds the whole scene from an empty file.
+- `scene2_floating_island_v2.blend` — saved scene, materials and camera in place.
+- `S2_FloatingIsland_v2.png` — final render, 1920x1080, Cycles, denoised, enough samples to be clean.
+
+## Report back
+Reply with: the three file paths; object count and final render time; what you improved over v1 (short list); and any flaw still visible in the final render, stated plainly. Do not claim something is fixed unless you saw it in the final image.</pre></div>
+    </details>
+    <details>
+      <summary>Agent brief · Scene 3 neon city <span>1,001 words · written by the main session</span></summary>
+      <div class="pre"><button class="big" type="button" data-big="b3">Enlarge</button><button class="copy" type="button" data-copy="b3">Copy</button><pre id="b3">Build a high-quality 3D scene in Blender and render it. You own this one scene end to end. Take the time to make it look genuinely good — iterate on previews until it does.
+
+## The scene: &quot;very complex&quot; — rainy neon city street at night
+A street-level view down a dense city canyon at night in the rain: rows of tall buildings with procedurally lit windows, neon blade signs and shop signs with generic words (RAMEN, HOTEL, BAR, ARCADE, CAFE … no real brand names), lit shopfronts with awnings, street lamps, a traffic light, overhead cables with string lights, cars with head and tail lights, flying vehicles with light trails, an elevated rail line with a lit train crossing the street, pedestrians with umbrellas, vending machines, rooftop water tanks, billboards and antennas, a hero tower with holographic rings at the end of the street, a wet reflective road with puddles, rain streaks and volumetric fog.
+
+A first version already exists. Your job is to make a clearly better v2 of the same idea — same subject, much higher craft and realism. Look at the first version before you start:
+- Render: blender-scenes/renders/S3_NeonCity_0001.png (Read it — it is an image)
+- Script: blender-scenes/scene3_neon_city.py
+- Shared helpers: blender-scenes/common.py (mesh builders, materials, lights, camera, Cycles setup)
+
+Where v1 is weak, and where to push: it does not feel like night (too evenly bright; you want deep blacks with pools of colored light and glow in the fog); buildings are plain boxes with a window-grid shader (add real facade depth near the camera: recessed windows with frames and sills, balconies, pipes, ledges, signage brackets, varied ground floors; window interiors with variation such as blinds, some dim, some colored); shopfronts are a flat grid of glowing tiles that reads as fake (build believable shop windows: glass with reflections, interior shelves/counters/stools seen through it, doors, menu boards); pedestrians are peg figures (give them proportioned bodies, arms, coats, bags, walking poses); cars are boxes (shape them: wheel arches, windscreens, bumpers, mirrors, wet reflective paint, light beams in the rain); the road needs real puddles with crisp reflections, lane wear, manhole steam, drain grates; rain is sparse streaks (add depth-layered rain, splashes on the road, drips from awnings); neon blows out to white (keep the color in the tubes, add glow/bloom via fog or compositor glare, tube-style letters, flicker variety); the far city and hero tower are lost behind the rail deck and haze (compose so there is a clear foreground, midground and a readable hero tower in the distance); the top of frame cuts through signs awkwardly. Aim for a cinematic frame with one clear focal point.
+
+## How to work (important — two other agents are building other scenes at the same time)
+- Do NOT use the Blender MCP tools (mcp__blender__*). There is one shared GUI Blender and three agents would clobber each other. Run Blender headless from the shell instead:
+  `/Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup -P your_script.py` (Blender 5.2.1 LTS, macOS, Metal GPU).
+  With --factory-startup the GPU is not enabled by default; enable it in your script: set `bpy.context.preferences.addons[&#x27;cycles&#x27;].preferences.compute_device_type = &#x27;METAL&#x27;`, call `.get_devices()`, set every device `.use = True`, then `scene.cycles.device = &#x27;GPU&#x27;`. Verify in the render log that it is really using the GPU.
+- Work only inside blender-scenes/v2/scene3/ (create it). Do not modify or delete anything outside that folder — the v1 files and the other agents&#x27; folders are off limits. You may copy common.py into your folder and change your copy freely.
+- Blender 5.2 API notes that held true in v1: Principled BSDF inputs are named &quot;Base Color&quot;, &quot;Roughness&quot;, &quot;Metallic&quot;, &quot;IOR&quot;, &quot;Transmission Weight&quot;, &quot;Coat Weight&quot;, &quot;Subsurface Weight&quot;, &quot;Emission Color&quot;, &quot;Emission Strength&quot;, &quot;Alpha&quot;. `Mesh.set_sharp_from_angle(angle=...)` exists. View transform &quot;AgX&quot; (it desaturates very bright emitters — keep neon strengths moderate). Material/world `use_nodes = True` may warn — wrap in try. Text objects use the built-in font; glossy walls right behind text mirror the letters and make them look doubled, so put a matte board behind wall-mounted text. The compositor API changed in 5.x — inspect it at runtime before relying on it. When unsure of an API name, check it in a quick headless run rather than guessing. Build geometry with bmesh / the data API rather than bpy.ops where you can; it is more reliable headless. Use instancing (shared mesh data or collection instances) for repeated things so the scene stays light.
+- Preview often at low cost (e.g. 50% resolution, 32–64 samples), Read the PNG, critique it honestly, fix, repeat. Check: reads as night, nothing important cut off by the frame, nothing floating or intersecting, text legible and not doubled, no large flat glowing rectangles, no fireflies in the final.
+- Rendering must be serialized across the three agents so the machine is not overloaded. Before ANY render (preview or final) take the lock, and release it after:
+  `while ! mkdir blender-scenes/v2/.render.lock 2&gt;/dev/null; do /bin/sleep 3; done; &lt;blender render command&gt;; rmdir blender-scenes/v2/.render.lock`
+  Put the lock, render and unlock in ONE shell command so the lock is always released, and give that command a long timeout. If the lock looks stale (older than 15 minutes and no Blender render process running), you may remove it. Keep an eye on memory: this is the heaviest scene; if a render gets very slow or swaps, cut geometry or samples rather than pushing on.
+- Disk is tight (about 8 GB free). Keep only the latest preview; delete old previews as you go. No EXR, no caches.
+
+## Deliverables (all in blender-scenes/v2/scene3/)
+- `scene3_neon_city_v2.py` — one re-runnable script that builds the whole scene from an empty file.
+- `scene3_neon_city_v2.blend` — saved scene, materials and camera in place.
+- `S3_NeonCity_v2.png` — final render, 1920x1080, Cycles, denoised, enough samples to be clean.
+
+## Report back
+Reply with: the three file paths; object count and final render time; what you improved over v1 (short list); and any flaw still visible in the final render, stated plainly. Do not claim something is fixed unless you saw it in the final image.</pre></div>
+    </details>
+    <details>
+      <summary>Resume message · sent to each agent after the limit reset <span>scene 1 shown, the other two differ only in file names</span></summary>
+      <div class="pre"><button class="big" type="button" data-big="b4">Enlarge</button><button class="copy" type="button" data-copy="b4">Copy</button><pre id="b4">Continue scene 1 v2 from where you stopped — you were cut off by a usage limit, which has now reset. Your files in blender-scenes/v2/scene1/ are intact (scene1_still_life_v2.py, preview.png, qa_full.png). No render lock is held and no Blender render is running. Same rules as before: headless Blender only, stay in your folder, take the render lock around every render. Finish the three deliverables (script, .blend, S1_StillLife_v2.png at 1920x1080) and report back as briefed.</pre></div>
+    </details>
+  </div>
+  <p class="aside">Folder paths in the briefs are shortened to start at <code>blender-scenes/</code>. Nothing else is changed.</p>
+</div></section>
+
+<footer class="gut"><div class="in">
+  <p>Blender 5.2.1 LTS, Cycles on Apple M4 Pro (Metal), OpenImageDenoise. Every scene is one Python script that builds from an empty file. No image textures, no downloaded models.</p>
+  <p>v1 object counts and render times are from the final v1 renders after the three fixes. v1 script line counts leave out the 332-line shared helper file. v1 material and light counts are read from the saved v1 file. The per-scene v1 cost is the v1 total split evenly three ways.</p>
+</div></footer>
+
+<script>
+document.querySelectorAll('.stage').forEach(function (stage) {
+  var box = stage.querySelector('[data-cmp]'), input = box.querySelector('input'), btns = stage.querySelectorAll('button[data-to]');
+  function mark() { btns.forEach(function (b) { b.classList.toggle('on', b.dataset.to === input.value); }); }
+  function set() { box.style.setProperty('--pos', input.value + '%'); mark(); }
+  input.addEventListener('input', function () { box.classList.remove('anim'); set(); });
+  btns.forEach(function (b) { b.addEventListener('click', function () { box.classList.add('anim'); input.value = b.dataset.to; set(); }); });
+  set();
+});
+document.querySelectorAll('button.copy').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    var pre = document.getElementById(btn.dataset.copy);
+    var done = function () { btn.textContent = 'Copied'; setTimeout(function () { btn.textContent = 'Copy'; }, 1500); };
+    var fallback = function () { var r = document.createRange(); r.selectNodeContents(pre); var s = getSelection(); s.removeAllRanges(); s.addRange(r); btn.textContent = 'Selected'; };
+    try { navigator.clipboard.writeText(pre.textContent).then(done, fallback); } catch (e) { fallback(); }
+  });
+});
+document.querySelectorAll('button.ocopy').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    var code = btn.previousElementSibling, label = btn.textContent;
+    var done = function () { btn.textContent = 'Copied'; setTimeout(function () { btn.textContent = label; }, 1500); };
+    var fallback = function () { var r = document.createRange(); r.selectNodeContents(code); var g = getSelection(); g.removeAllRanges(); g.addRange(r); btn.textContent = 'Selected, press Cmd+C'; };
+    try { navigator.clipboard.writeText(btn.dataset.cmd).then(done, fallback); } catch (e) { fallback(); }
+  });
+});
+
+(function () {
+  var dlg = document.createElement('dialog'); dlg.className = 'modal';
+  dlg.innerHTML = '<div class="mhead"><span class="mwho"></span><button type="button" data-act="copy">Copy</button><button type="button" data-act="close">Close  Esc</button></div><div class="mbody"><p></p></div>';
+  document.body.appendChild(dlg);
+  var who = dlg.querySelector('.mwho'), body = dlg.querySelector('.mbody'), text = body.querySelector('p');
+  function show(label, value, long) {
+    who.textContent = label; text.textContent = value; body.className = 'mbody ' + (long ? 'long' : 'short'); body.scrollTop = 0;
+    if (dlg.showModal) { dlg.showModal(); } else { dlg.setAttribute('open', ''); }
+  }
+  function close() { if (dlg.close) { dlg.close(); } else { dlg.removeAttribute('open'); } }
+  dlg.addEventListener('click', function (e) {
+    if (e.target === dlg) { close(); return; }
+    var act = e.target.dataset && e.target.dataset.act;
+    if (act === 'close') { close(); }
+    if (act === 'copy') {
+      var b = e.target, done = function () { b.textContent = 'Copied'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); };
+      var fb = function () { var r = document.createRange(); r.selectNodeContents(text); var g = getSelection(); g.removeAllRanges(); g.addRange(r); };
+      try { navigator.clipboard.writeText(text.textContent).then(done, fb); } catch (err) { fb(); }
+    }
+  });
+  document.querySelectorAll('blockquote.zoom').forEach(function (q) {
+    function open() { var w = q.parentElement.querySelector('.who'); show(w ? w.textContent.replace(/\s+/g, ' ').trim() : 'Prompt', q.textContent.trim(), false); }
+    q.addEventListener('click', open);
+    q.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+  });
+  document.querySelectorAll('button.big').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var pre = document.getElementById(b.dataset.big), sum = b.closest('details').querySelector('summary');
+      show(sum.firstChild.textContent.trim(), pre.textContent, true);
+    });
+  });
+})();
+</script>
