@@ -6,7 +6,7 @@ Run from the repo root:  python3 tools/build_site.py
 import json, os, re, html
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-REPO = 'https://github.com/realcodebear/blender-effort-test'
+REPO = 'https://github.com/realcodebear/blender-fable-5.2'
 s = open(os.path.join(ROOT, 'tools', 'page_source.html')).read()
 
 SCENES = [

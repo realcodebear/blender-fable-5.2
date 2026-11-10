@@ -1,6 +1,6 @@
 # Blender Effort Test
 
-**Live page: https://realcodebear.github.io/blender-effort-test/**
+**Live page: https://realcodebear.github.io/blender-fable-5.2/**
 
 Three Blender scenes, each built twice by the same AI model (Claude Fable 5.2) from Python, with no downloaded models and no image textures.
 
